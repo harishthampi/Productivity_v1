@@ -43,6 +43,16 @@ Backend: a Supabase project with both migrations applied (`npx supabase db push`
 | Delete before T | Create a task 3 min ahead, then delete it. | No alerts fire. |
 | Spots full | `max_spots = 1`. Two guests accept at about the same time. | One gets "event is full". |
 
+## Sign-in and deletion
+| Case | Steps | Pass when |
+| --- | --- | --- |
+| Guest upgrade keeps data | Skip, add 2 tasks and a squad, then Profile → Sign in with Google. | Same tasks, stats and squad afterwards. The account label shows the email. |
+| Returning user, new phone | Sign in on phone A and add tasks. On phone B, add 1 task as a guest, then sign in with the same account. | Phone B shows A's tasks plus its own. B's task appears on A after a refresh. Nothing is duplicated. |
+| Email code | Enter an email, then the 6-digit code. | Signed in. A wrong code shows an error and no crash. |
+| Apple (iPhone) | Tap the Apple button and cancel. Tap it again and complete. | Cancel does nothing. Completing signs in, and the name fills on the first sign-in. |
+| Sign out | Profile → Sign out. | The phone is cleared and back on the welcome screen. Signing in again restores the data. |
+| Delete account | Profile → Delete account → Delete. | Back on the welcome screen. Signing in with the same identity starts empty. A friend's event still lists you by name. |
+
 ## Known gaps to check on devices
 - **Android 14+ timing:** exact alarms are off by default, so alerts can arrive a few minutes late. Note how late they arrive.
 - **iOS 64-alert cap:** iOS holds at most 64 pending notifications. Test with 30+ upcoming tasks.

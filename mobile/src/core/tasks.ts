@@ -237,3 +237,37 @@ export function timeWindowStats(logs: AttemptLog[]) {
   }
   return { by, best };
 }
+
+/**
+ * Gives every local task and log fresh ids. Used when the user switches to a different account: the old ids
+ * already belong to the previous account on the server, so re-uploading them under the new one would be refused.
+ */
+export function rekeyLocalData(tasks: Task[], logs: AttemptLog[], uuid: () => string) {
+  const ids = new Map(tasks.map((t) => [t.id, uuid()]));
+  return {
+    tasks: tasks.map((t) => ({
+      ...t,
+      id: ids.get(t.id)!,
+      parent_task_id: t.parent_task_id ? (ids.get(t.parent_task_id) ?? null) : null,
+    })),
+    logs: logs
+      .filter((l) => ids.has(l.task_id))
+      .map((l) => {
+        const key = uuid();
+        return { ...l, id: key, idempotency_key: key, task_id: ids.get(l.task_id)! };
+      }),
+  };
+}
+
+/** Adds server rows the device doesn't have yet (e.g. signing in on a new phone). Local copies win. */
+export function mergeServerData(
+  local: { tasks: Task[]; logs: AttemptLog[] },
+  server: { tasks: Task[]; logs: AttemptLog[] },
+) {
+  const taskIds = new Set(local.tasks.map((t) => t.id));
+  const logKeys = new Set(local.logs.map((l) => l.idempotency_key));
+  return {
+    tasks: [...local.tasks, ...server.tasks.filter((t) => !taskIds.has(t.id))],
+    logs: [...local.logs, ...server.logs.filter((l) => !logKeys.has(l.idempotency_key))],
+  };
+}

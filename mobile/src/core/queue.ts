@@ -9,7 +9,13 @@ export type Mutation =
 export const enqueue = (queue: Mutation[], m: Mutation): Mutation[] =>
   queue.some((q) => q.key === m.key) ? queue : [...queue, m];
 
-/** Sends in order; stops at the first failure so later mutations never overtake earlier ones. Returns what is left. */
+/** The server refused this mutation for good (RLS, constraint). Retrying can never succeed, so it is dropped. */
+export class PermanentError extends Error {}
+
+/**
+ * Sends in order. Stops at the first transient failure (e.g. offline) so later mutations never overtake earlier ones,
+ * and skips permanent ones so a single bad row can't block the queue forever. Returns what is left.
+ */
 export async function flush(
   queue: Mutation[],
   send: (m: Mutation) => Promise<void>,
@@ -17,7 +23,11 @@ export async function flush(
   for (let i = 0; i < queue.length; i++) {
     try {
       await send(queue[i]);
-    } catch {
+    } catch (e) {
+      if (e instanceof PermanentError) {
+        console.warn('Dropping mutation the server rejected', queue[i].op, e.message);
+        continue;
+      }
       return queue.slice(i);
     }
   }

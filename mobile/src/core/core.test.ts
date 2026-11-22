@@ -9,10 +9,12 @@ import {
   resolveCheckin,
   retryPresets,
   timeWindowStats,
+  rekeyLocalData,
+  mergeServerData,
   windowOf,
   type AttemptLog,
 } from './tasks.ts';
-import { enqueue, flush, type Mutation } from './queue.ts';
+import { enqueue, flush, PermanentError, type Mutation } from './queue.ts';
 
 const T = new Date('2026-11-22T15:00:00Z');
 const at = (mins: number) => new Date(T.getTime() + mins * 60_000);
@@ -143,4 +145,53 @@ test('time windows: local-hour buckets, retries skipped, best needs 3+ samples',
   assert.deepEqual(by.Afternoon, { total: 2, onTime: 2 });
   assert.equal(best, 'Morning');
   assert.equal(timeWindowStats([]).best, null);
+});
+
+test('queue skips permanent errors but still stops on transient ones', async () => {
+  const m = (key: string): Mutation => ({ key, op: 'delete_task', payload: { id: key } });
+  const sent: string[] = [];
+  const left = await flush([m('a'), m('bad'), m('b'), m('offline'), m('c')], async (x) => {
+    if (x.key === 'bad') throw new PermanentError('rls');
+    if (x.key === 'offline') throw new Error('network');
+    sent.push(x.key);
+  });
+  assert.deepEqual(sent, ['a', 'b']);
+  assert.deepEqual(
+    left.map((x) => x.key),
+    ['offline', 'c'],
+  );
+});
+
+test('rekey gives new ids and keeps task ↔ log ↔ parent links', () => {
+  const r = resolveCheckin(make(), 'retry', at(31), 'k1', at(240));
+  const child = { ...make(), id: 'task-2', parent_task_id: 'task-1' };
+  let n = 0;
+  const out = rekeyLocalData([r.task, child], [r.log], () => `new-${n++}`);
+  assert.deepEqual(
+    out.tasks.map((t) => t.id),
+    ['new-0', 'new-1'],
+  );
+  assert.equal(out.tasks[1].parent_task_id, 'new-0');
+  assert.equal(out.logs[0].task_id, 'new-0');
+  assert.equal(out.logs[0].idempotency_key, out.logs[0].id);
+  assert.notEqual(out.logs[0].idempotency_key, 'k1');
+});
+
+test('merge adds only rows the device lacks; local wins', () => {
+  const local = { tasks: [{ ...make(), title: 'local' }], logs: [] as AttemptLog[] };
+  const server = {
+    tasks: [
+      { ...make(), title: 'server' },
+      { ...make(), id: 'other' },
+    ],
+    logs: [] as AttemptLog[],
+  };
+  const out = mergeServerData(local, server);
+  assert.deepEqual(
+    out.tasks.map((t) => [t.id, t.title]),
+    [
+      ['task-1', 'local'],
+      ['other', 'Submit Report'],
+    ],
+  );
 });

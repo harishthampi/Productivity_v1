@@ -37,6 +37,9 @@ Source of truth: [`supabase/migrations/`](../supabase/migrations/). Tests: `npm 
 - `promote_next_bench(p_event_id)` is owner-only. It turns the lowest-`sort_order` bench invite into `invited` / `primary` and returns its id.
 - Rejecting a proposal is a direct owner update: `rsvp_status = 'invited', proposed_times = '{}'`.
 
+## Account
+- `delete_my_account()` (`authenticated`) deletes the caller from `auth.users`. That cascades to their profile, tasks, logs, devices, squads and hosted events (with those events' invites). On other people's rows, `event_invites.invitee_user_id` and `squad_members.member_user_id` are set to null, so hosts keep the name they typed. Covered by `tests/account.test.mjs`.
+
 ## Push (server-side)
 - `push(user_ids, title, body, data)` posts to Expo's push API through `pg_net`, using `user_devices` rows where `notifications_granted` is true. It does nothing when `pg_net` is missing. Clients cannot call it.
 - Triggers send: the owner when an invitee accepts, declines or asks for a new time (plus a bench nudge on a decline); the invitee when their invite becomes active (insert, or promotion from the bench); and active invitees when `events.scheduled_at` changes. Changes the owner makes don't notify the owner.

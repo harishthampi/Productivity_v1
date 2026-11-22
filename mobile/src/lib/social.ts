@@ -252,6 +252,15 @@ export const inviteLink = (token: string) => {
   return web ? `${web.replace(/\/$/, '')}/e/${token}` : `pulseplan://e/${token}`;
 };
 
+let myPushToken: string | null = null;
+
+/** Removes this phone's push token from the current account (on sign-out). */
+export async function forgetThisDevice() {
+  if (!supabase || !myPushToken) return;
+  await db().from('user_devices').delete().eq('push_token', myPushToken);
+  myPushToken = null;
+}
+
 /** Saves this device's Expo push token so the database triggers can reach it. Needs a dev build + EAS project id. */
 export async function registerPushToken() {
   if (!supabase || Platform.OS === 'web') return;
@@ -260,6 +269,7 @@ export async function registerPushToken() {
   try {
     const perm = await Notifications.getPermissionsAsync();
     const { data: token } = await Notifications.getExpoPushTokenAsync({ projectId });
+    myPushToken = token;
     const user_id = await me();
     unwrap(
       await db().from('user_devices').upsert(

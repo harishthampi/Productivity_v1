@@ -85,6 +85,8 @@ export default function RootLayout() {
         <Stack.Screen name="event/[id]" options={{ title: 'Event' }} />
         <Stack.Screen name="squad/[id]" options={{ presentation: 'modal', title: 'Squad' }} />
         <Stack.Screen name="e/[token]" options={{ title: 'Invite' }} />
+        <Stack.Screen name="welcome" options={{ headerShown: false, gestureEnabled: false }} />
+        <Stack.Screen name="auth-callback" options={{ headerShown: false }} />
       </Stack>
     </>
   );

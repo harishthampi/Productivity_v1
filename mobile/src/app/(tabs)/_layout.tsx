@@ -1,6 +1,8 @@
-import { Tabs } from 'expo-router';
+import { Redirect, Tabs } from 'expo-router';
 import { Text, type ColorValue } from 'react-native';
 import { colors } from '../../components/ui';
+import { backendReady } from '../../lib/social';
+import { useStore } from '../../lib/store';
 
 const icon = (glyph: string) =>
   function TabIcon({ color }: { color: ColorValue }) {
@@ -8,6 +10,8 @@ const icon = (glyph: string) =>
   };
 
 export default function TabsLayout() {
+  const onboarded = useStore((s) => !!s.settings.onboarded);
+  if (backendReady && !onboarded) return <Redirect href="/welcome" />;
   return (
     <Tabs
       screenOptions={{

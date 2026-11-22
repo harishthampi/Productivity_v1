@@ -19,6 +19,14 @@ The repo is configured for release. The remaining steps need your Apple and Goog
 5. **Build:** `npx eas-cli@latest build --profile production --platform all`.
 6. **Beta:** `npx eas-cli@latest submit --platform ios` sends the build to TestFlight. `--platform android` sends it to Play Internal testing. For Android, create the app in Play Console first and upload the first build by hand.
 
+## Sign-in setup (Supabase dashboard → Authentication)
+The app offers Sign in with Apple, Google and a 6-digit email code. "Skip for now" keeps a guest (anonymous) account, and signing in later upgrades that same account.
+1. **URL configuration:** add `pulseplan://**` to Redirect URLs.
+2. **Settings:** turn on *Allow anonymous sign-ins* and *Allow manual linking* (needed to upgrade guests).
+3. **Email:** in Templates → *Magic Link* and *Change Email Address*, include `{{ .Token }}` so the email carries the 6-digit code the app asks for.
+4. **Apple:** in the Apple Developer portal, enable *Sign in with Apple* for `com.pulseplan.app` (EAS turns on the entitlement because `ios.usesAppleSignIn` is set). In Supabase → Providers → Apple, add the bundle id as a Client ID. Browser sign-in on Android also needs a Services ID, a key and the Supabase callback URL.
+5. **Google:** create an OAuth client of type *Web application* in Google Cloud. Add the Supabase callback URL (`https://<project>.supabase.co/auth/v1/callback`), then paste the client ID and secret into Supabase → Providers → Google.
+
 ## Store listing inputs
 - **Name / subtitle:** PulsePlan. Suggested subtitle: "Reminders that check in".
 - **Category:** Productivity.
@@ -33,9 +41,7 @@ The repo is configured for release. The remaining steps need your Apple and Goog
 | Identifiers (push token, anonymous account id) | Yes | Yes | App functionality | Used to send reminders and invite updates. |
 | Usage data, diagnostics, location, tracking | No | – | – | No analytics SDK. No tracking. |
 
-Data isn't sold or used for advertising. Data is encrypted in transit (HTTPS to Supabase). **Account deletion:** both stores now require in-app account deletion. It isn't built yet; add it before the public (non-beta) release.
+Data isn't sold or used for advertising. Data is encrypted in transit (HTTPS to Supabase). **Account deletion:** Profile → Account → Delete account removes the account and all its server data (`delete_my_account()`). Give this path in App Store Connect and Play Console. Play also needs a web link for deletion requests; until there is a web page for it, a support email works.
 
 ## Before going public (not needed for TestFlight / internal testing)
-- Real sign-in (Apple, Google, magic link). Anonymous accounts are lost on reinstall.
-- In-app account deletion.
 - An app icon and splash screen. The current ones are Expo's defaults in `mobile/assets/`.

@@ -10,6 +10,7 @@ Spec: [docs/PROJECT_SPECIFICATION.md](docs/PROJECT_SPECIFICATION.md). Schema and
 ## Mobile app structure
 - `src/core/`: pure TypeScript (task state machine, offline queue), unit-tested with `node --test`. No React Native imports allowed here.
 - `src/lib/`: the persisted store (`expo-sqlite` localStorage), notification scheduling, Supabase sync. Sync runs only when `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_ANON_KEY` are set (see `mobile/.env.example`); without them the app is local-only and mutations stay queued.
+- `src/lib/auth.ts`: Apple, Google and email-code sign-in. It upgrades the guest account in place, or switches accounts (rekeys local tasks and pulls server ones). Also sign-out and account deletion.
 - `src/app/`: Expo Router screens. Tabs live in `(tabs)/`. The `task/[id]/checkin` route is the `pulseplan://task/:id/checkin` deep link.
 
 ## Working rules

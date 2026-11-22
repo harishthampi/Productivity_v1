@@ -11,7 +11,8 @@
       "bundleIdentifier": "com.pulseplan.app",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
-      }
+      },
+      "usesAppleSignIn": true
     },
     "android": {
       "adaptiveIcon": {
@@ -40,7 +41,9 @@
         {
           "contactsPermission": "PulsePlan reads the contacts you pick so you can invite them to plans."
         }
-      ]
+      ],
+      "expo-web-browser",
+      "expo-apple-authentication"
     ],
     "scheme": "pulseplan",
     "experiments": {

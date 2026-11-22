@@ -7,6 +7,8 @@ import {
   DEFAULT_CHECKIN_DELAY_MINS,
   editTask,
   isExpired,
+  mergeServerData,
+  rekeyLocalData,
   resolveCheckin,
   type AttemptLog,
   type CheckinAction,
@@ -17,7 +19,7 @@ import { enqueue, flush, type Mutation } from '../core/queue';
 import { cancelTaskAlerts, scheduleTaskAlerts } from './notifications';
 import { send } from './sync';
 
-type Settings = { defaultCheckinDelay: number | null };
+type Settings = { defaultCheckinDelay: number | null; onboarded?: boolean };
 type State = { tasks: Task[]; logs: AttemptLog[]; queue: Mutation[]; settings: Settings };
 const KEY = 'pulseplan.state.v1';
 const EMPTY: State = {
@@ -56,6 +58,7 @@ export const useStore = <T>(select: (s: State) => T): T =>
 export const getTask = (id: string) => state.tasks.find((t) => t.id === id);
 export const getStats = () => computeStats(state.logs);
 export const getSettings = () => state.settings;
+export const pendingSyncCount = () => state.queue.length;
 export const setDefaultCheckinDelay = (mins: number | null) =>
   set({ ...state, settings: { ...state.settings, defaultCheckinDelay: mins } });
 
@@ -66,6 +69,24 @@ const insertLog = (l: AttemptLog): Mutation => ({
   op: 'insert_log',
   payload: l,
 });
+export const setOnboarded = () =>
+  set({ ...state, settings: { ...state.settings, onboarded: true } });
+
+/** Sign-out / account deletion: forget everything on this device. The next person starts at the welcome screen. */
+export const wipeLocal = () => set({ ...EMPTY, settings: { ...EMPTY.settings } });
+
+/** Switched to a different account: new ids (old ones belong to the previous account) and a full re-upload. */
+export function adoptForNewAccount() {
+  const { tasks, logs } = rekeyLocalData(state.tasks, state.logs, uuid);
+  let queue: Mutation[] = [];
+  for (const t of tasks) queue = enqueue(queue, upsertTask(t));
+  for (const l of logs) queue = enqueue(queue, insertLog(l));
+  set({ ...state, tasks, logs, queue });
+}
+
+export const mergeFromServer = (server: { tasks: Task[]; logs: AttemptLog[] }) =>
+  set({ ...state, ...mergeServerData(state, server) });
+
 const replace = (tasks: Task[], t: Task) => tasks.map((x) => (x.id === t.id ? t : x));
 
 export function addTask(input: TaskInput): Task {
