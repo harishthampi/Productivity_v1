@@ -7,6 +7,11 @@ Spec: [docs/PROJECT_SPECIFICATION.md](docs/PROJECT_SPECIFICATION.md). Schema and
 - `supabase/`: config, `migrations/` (schema + RLS), `tests/` (PGlite RLS tests).
 - `docs/`: spec and database reference. Update them whenever a schema, payload or flow changes.
 
+## Mobile app structure
+- `src/core/`: pure TypeScript (task state machine, offline queue), unit-tested with `node --test`. No React Native imports allowed here.
+- `src/lib/`: the persisted store (`expo-sqlite` localStorage), notification scheduling, Supabase sync. Sync runs only when `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_ANON_KEY` are set (see `mobile/.env.example`); without them the app is local-only and mutations stay queued.
+- `src/app/`: Expo Router screens. The `task/[id]/checkin` route is the `pulseplan://task/:id/checkin` deep link.
+
 ## Working rules
 - Work one phase or task group from the spec's Implementation Plan at a time. Before coding, state the files and schema changes involved.
 - Add schema changes as a new migration file. Never edit a migration that has already been applied.
@@ -15,5 +20,5 @@ Spec: [docs/PROJECT_SPECIFICATION.md](docs/PROJECT_SPECIFICATION.md). Schema and
 ## Checks before calling something done
 ```bash
 npm run test:db                                 # root: migrations + RLS
-cd mobile && npm run typecheck && npm run lint  # app
+cd mobile && npm test && npm run typecheck && npm run lint  # app
 ```

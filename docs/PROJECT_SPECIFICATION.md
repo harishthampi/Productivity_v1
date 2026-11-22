@@ -167,10 +167,10 @@ Event Completes (or 4 players accept)
 - [x] **1.3 Auth & RLS Policies:** Configure authentication and write strict RLS policies ensuring solo tasks/logs and squads are owner-only, while `event_invites` are scoped strictly to the event owner or matching invitee/token.
 
 ## Phase 2: Solo Accountability & 30-Minute Check-In Engine
-- [ ] **2.1 Task State Machine & Local Storage:** Implement pure TypeScript state transition functions (`scheduled` → `reminded` → `checkin_pending` → `completed` / `retried` / `failed`) and offline mutation queue with `idempotency_key`.
-- [ ] **2.2 Notification Scheduler Service:** Build wrapper around Expo Notifications that schedules both Stage 1 (`T`) and Stage 2 (`T + checkin_delay_mins`) local alerts with interactive categories (`COMPLETE`, `RETRY`, `MISSED`), cancels stale IDs on edit/delete, and reconciles overdue check-ins on app foreground.
-- [ ] **2.3 Today Hub & Add Task UI:** Build `Today Hub` screen, active check-in banner, and `Add/Edit Task` modal with default 30-minute check-in setting.
-- [ ] **2.4 Check-In Modal, Retry Picker & Celebration Overlay:** Build the 30-minute follow-up prompt, quick retry time presets + custom picker, and haptic celebration feedback screen.
+- [x] **2.1 Task State Machine & Local Storage:** Implement pure TypeScript state transition functions (`scheduled` → `reminded` → `checkin_pending` → `completed` / `retried` / `failed`) and offline mutation queue with `idempotency_key`.
+- [x] **2.2 Notification Scheduler Service:** Build wrapper around Expo Notifications that schedules both Stage 1 (`T`) and Stage 2 (`T + checkin_delay_mins`) local alerts with interactive categories (`COMPLETE`, `RETRY`, `MISSED`), cancels stale IDs on edit/delete, and reconciles overdue check-ins on app foreground.
+- [x] **2.3 Today Hub & Add Task UI:** Build `Today Hub` screen, active check-in banner, and `Add/Edit Task` modal with default 30-minute check-in setting.
+- [x] **2.4 Check-In Modal, Retry Picker & Celebration Overlay:** Build the 30-minute follow-up prompt, quick retry time presets + custom picker, and haptic celebration feedback screen.
 
 ## Phase 3: Targeted Squads, Social Micro-Scheduler & Time Negotiation
 - [ ] **3.1 Squads Management & Auto-Save Hook:** Build `My Squads` UI, contact/friend selection, Primary vs. Bench tiering, and the post-event *"Save these players as a Squad?"* prompt.
