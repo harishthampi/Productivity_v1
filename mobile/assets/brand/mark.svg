@@ -1,0 +1,5 @@
+<!-- PulsePlan mark: a pulse line that resolves into a check. 1024 canvas, centered. Source for all app icons. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <path d="M152 522 H332 L412 342 L512 682 L592 522 L662 602 L872 352"
+        fill="none" stroke="#FFFFFF" stroke-width="76" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
