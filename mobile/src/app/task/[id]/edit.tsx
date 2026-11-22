@@ -1,7 +1,8 @@
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import { Button, colors, DateTimeField } from '../../../components/ui';
+import { Button, colors } from '../../../components/ui';
+import { DateTimeField } from '../../../components/DateTimeField';
 import { DEFAULT_CHECKIN_DELAY_MINS, isTerminal, type PriorityTier } from '../../../core/tasks';
 import { addTask, deleteTask, getTask, updateTask } from '../../../lib/store';
 

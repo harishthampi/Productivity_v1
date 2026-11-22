@@ -2,7 +2,8 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Celebration } from '../../../components/Celebration';
-import { Button, colors, DateTimeField, formatWhen } from '../../../components/ui';
+import { Button, colors, formatWhen } from '../../../components/ui';
+import { DateTimeField } from '../../../components/DateTimeField';
 import { isTerminal, retryPresets } from '../../../core/tasks';
 import { getStats, resolveTask, useStore } from '../../../lib/store';
 

@@ -2,7 +2,7 @@ import * as Notifications from 'expo-notifications';
 import { router, Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
-import { AppState } from 'react-native';
+import { AppState, Platform } from 'react-native';
 import { colors } from '../components/ui';
 import { isTerminal } from '../core/tasks';
 import {
@@ -11,6 +11,7 @@ import {
   resyncAllAlerts,
   setupNotifications,
 } from '../lib/notifications';
+import { backendReady, registerPushToken } from '../lib/social';
 import { allTasks, getTask, reconcileExpired, resolveTask, syncNow } from '../lib/store';
 
 const handled = new Set<string>();
@@ -21,10 +22,12 @@ function handleResponse(r: Notifications.NotificationResponse) {
   handled.add(key);
   void Notifications.clearLastNotificationResponseAsync().catch(() => {});
 
-  const { taskId, stage } = (r.notification.request.content.data ?? {}) as {
+  const { taskId, stage, eventId } = (r.notification.request.content.data ?? {}) as {
     taskId?: string;
     stage?: string;
+    eventId?: string;
   };
+  if (eventId) return router.push({ pathname: '/event/[id]', params: { id: eventId } }); // server push
   const task = taskId ? getTask(taskId) : undefined;
   if (!task || stage !== 'checkin') return; // start-reminder taps just open the Today hub
 
@@ -47,10 +50,12 @@ async function onForeground() {
   reconcileExpired();
   await resyncAllAlerts(allTasks());
   void syncNow();
+  if (backendReady) void registerPushToken();
 }
 
 export default function RootLayout() {
   useEffect(() => {
+    if (Platform.OS === 'web') return; // the web build only serves the /e/:token RSVP page
     void (async () => {
       await setupNotifications().catch((e) => console.warn('Notification setup failed', e));
       await requestNotifications().catch(() => false);
@@ -70,12 +75,16 @@ export default function RootLayout() {
     <>
       <StatusBar style="dark" />
       <Stack screenOptions={{ contentStyle: { backgroundColor: colors.bg } }}>
-        <Stack.Screen name="index" options={{ title: 'Today' }} />
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="task/[id]/edit" options={{ presentation: 'modal', title: 'Task' }} />
         <Stack.Screen
           name="task/[id]/checkin"
           options={{ presentation: 'modal', title: 'Check-in' }}
         />
+        <Stack.Screen name="event/new" options={{ presentation: 'modal', title: 'New Activity' }} />
+        <Stack.Screen name="event/[id]" options={{ title: 'Event' }} />
+        <Stack.Screen name="squad/[id]" options={{ presentation: 'modal', title: 'Squad' }} />
+        <Stack.Screen name="e/[token]" options={{ title: 'Invite' }} />
       </Stack>
     </>
   );

@@ -1,10 +1,10 @@
-import { router, Stack } from 'expo-router';
+import { router, Tabs } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { AppState, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Button, colors, formatTime, formatWhen } from '../components/ui';
-import { deriveStatus, isTerminal, type Task, type TaskStatus } from '../core/tasks';
-import { notificationsAllowed } from '../lib/notifications';
-import { resolveTask, useStore } from '../lib/store';
+import { Button, colors, formatTime, formatWhen } from '../../components/ui';
+import { deriveStatus, isTerminal, type Task, type TaskStatus } from '../../core/tasks';
+import { notificationsAllowed } from '../../lib/notifications';
+import { resolveTask, useStore } from '../../lib/store';
 
 function useNow(everyMs = 30_000) {
   const [now, setNow] = useState(() => new Date());
@@ -100,7 +100,7 @@ export default function TodayHub() {
 
   return (
     <>
-      <Stack.Screen
+      <Tabs.Screen
         options={{
           headerRight: () => (
             <Button label="+ Add Task" kind="primary" onPress={() => openEdit('new')} />

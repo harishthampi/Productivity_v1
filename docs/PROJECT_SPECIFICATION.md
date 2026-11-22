@@ -173,10 +173,10 @@ Event Completes (or 4 players accept)
 - [x] **2.4 Check-In Modal, Retry Picker & Celebration Overlay:** Build the 30-minute follow-up prompt, quick retry time presets + custom picker, and haptic celebration feedback screen.
 
 ## Phase 3: Targeted Squads, Social Micro-Scheduler & Time Negotiation
-- [ ] **3.1 Squads Management & Auto-Save Hook:** Build `My Squads` UI, contact/friend selection, Primary vs. Bench tiering, and the post-event *"Save these players as a Squad?"* prompt.
-- [ ] **3.2 Create Event & Gated Invite Generation:** Build `Create Activity` screen allowing selection of a specific subset of Squad members/contacts and generating per-invitee scoped `invite_token`s.
-- [ ] **3.3 Event Detail, Time Negotiation & Bench Promotion:** Build `Event Detail` view with real-time RSVP updates, owner **Approve/Reject Time Change** workflow, and 1-tap **Invite Next Bench Member** flow.
-- [ ] **3.4 Web RSVP Fallback & Push Alerts:** Build mobile-first `/e/:inviteToken` web page (Accept, Decline, Request Time Change) and server push triggers for invites, RSVPs, and approved time changes.
+- [x] **3.1 Squads Management & Auto-Save Hook:** Build `My Squads` UI, contact/friend selection, Primary vs. Bench tiering, and the post-event *"Save these players as a Squad?"* prompt.
+- [x] **3.2 Create Event & Gated Invite Generation:** Build `Create Activity` screen allowing selection of a specific subset of Squad members/contacts and generating per-invitee scoped `invite_token`s.
+- [x] **3.3 Event Detail, Time Negotiation & Bench Promotion:** Build `Event Detail` view with real-time RSVP updates, owner **Approve/Reject Time Change** workflow, and 1-tap **Invite Next Bench Member** flow.
+- [x] **3.4 Web RSVP Fallback & Push Alerts:** Build mobile-first `/e/:inviteToken` web page (Accept, Decline, Request Time Change) and server push triggers for invites, RSVPs, and approved time changes.
 
 ## Phase 4: Reliability Profile, QA & Store Submission
 - [ ] **4.1 Profile & Reliability Analytics:** Build `Profile` tab computing **Completed On-Time** vs. **Retried** vs. **Failed** counts/percentages, active streak, and best time-of-day completion insights.

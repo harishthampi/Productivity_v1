@@ -18,7 +18,7 @@ export const supabase =
       })
     : null;
 
-async function ensureSession() {
+export async function ensureSession() {
   if (!supabase) throw new Error('Backend not configured');
   const { data } = await supabase.auth.getSession();
   if (data.session) return;

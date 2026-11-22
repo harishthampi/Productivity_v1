@@ -19,6 +19,8 @@ Source of truth: [`supabase/migrations/`](../supabase/migrations/). Tests: `npm 
 | `event_invites` | One row per recipient, each with its own random 64-hex-char `invite_token`. `rsvp_status`: `bench` (not yet released), `invited`, `accepted`, `declined`, `time_change_requested`. `proposed_times` holds 1–2 values exactly when the status is `time_change_requested`. |
 | `user_devices` | Push tokens, unique per `(user_id, push_token)`. |
 
+`event_invites.sort_order` and `squad_members.sort_order` set the order (lowest first). On invites it decides which bench player is promoted next.
+
 ## Access rules (RLS)
 - **Owner-only:** `users` (self), `tasks`, `task_attempt_logs`, `user_devices`, `squads`, `squad_members`. Solo metrics are never visible to anyone else.
 - **events:** the owner has full access. An invitee whose invite is not `bench` can read the event.
@@ -27,4 +29,15 @@ Source of truth: [`supabase/migrations/`](../supabase/migrations/). Tests: `npm 
 
 ## RPCs (callable by `anon` and `authenticated`)
 - `get_invite_by_token(p_token)` returns `title, scheduled_at, event_timezone, location_text, owner_display_name, event_status, rsvp_status, proposed_times`. An unknown token or a `bench` token returns no row, which the client turns into a 404.
-- `respond_to_invite(p_token, p_status, p_proposed_times default '{}')`. `p_status` must be `accepted`, `declined` or `time_change_requested` (the last needs 1–2 times). Works only on `active` events. Raises `P0002` when the invite is not found. Setting the same status twice is harmless.
+- `respond_to_invite(p_token, p_status, p_proposed_times default '{}')`. `p_status` must be `accepted`, `declined` or `time_change_requested` (the last needs 1–2 times). Works only on `active` events. Raises `P0002` when the invite is not found. Setting the same status twice is harmless. Accepting fails with `event is full` once `max_spots` people have accepted. The event row is locked during the check, so two people can't both take the last spot.
+
+## Owner and app-user RPCs (`authenticated` only)
+- `claim_invite(p_token)` sets `invitee_user_id = auth.uid()` on a non-bench invite that is unclaimed (or already this user's) and returns the `event_id`. It fails for the event owner and for anyone after the first claimer. Sharing a link per invitee and letting the app claim it is how app users get linked to invites.
+- `approve_time_change(p_invite_id, p_time)` is owner-only, and `p_time` must be one of that invite's `proposed_times`. It moves `events.scheduled_at`, resets other `accepted` / `time_change_requested` invites to `invited` (so they re-confirm), and marks the requester `accepted`.
+- `promote_next_bench(p_event_id)` is owner-only. It turns the lowest-`sort_order` bench invite into `invited` / `primary` and returns its id.
+- Rejecting a proposal is a direct owner update: `rsvp_status = 'invited', proposed_times = '{}'`.
+
+## Push (server-side)
+- `push(user_ids, title, body, data)` posts to Expo's push API through `pg_net`, using `user_devices` rows where `notifications_granted` is true. It does nothing when `pg_net` is missing. Clients cannot call it.
+- Triggers send: the owner when an invitee accepts, declines or asks for a new time (plus a bench nudge on a decline); the invitee when their invite becomes active (insert, or promotion from the bench); and active invitees when `events.scheduled_at` changes. Changes the owner makes don't notify the owner.
+- `events` and `event_invites` are in the `supabase_realtime` publication. Subscribers only receive rows RLS lets them see.
