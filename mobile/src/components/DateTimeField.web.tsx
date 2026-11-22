@@ -1,5 +1,5 @@
 import { createElement } from 'react';
-import { colors } from './ui';
+import { useTheme } from '../theme';
 
 // datetime-local works in local time without a zone, so convert both ways explicitly.
 const toLocalInput = (d: Date) => {
@@ -9,6 +9,7 @@ const toLocalInput = (d: Date) => {
 
 /** Web version: the native date-time picker package has no web support. */
 export function DateTimeField({ value, onChange }: { value: Date; onChange: (d: Date) => void }) {
+  const t = useTheme();
   return createElement('input', {
     type: 'datetime-local',
     value: toLocalInput(value),
@@ -21,8 +22,10 @@ export function DateTimeField({ value, onChange }: { value: Date; onChange: (d: 
       fontSize: 16,
       padding: 10,
       borderRadius: 12,
-      border: `1px solid ${colors.border}`,
-      color: colors.text,
+      border: `1px solid ${t.border}`,
+      color: t.text,
+      backgroundColor: t.card,
+      colorScheme: t.dark ? 'dark' : 'light',
     },
   });
 }

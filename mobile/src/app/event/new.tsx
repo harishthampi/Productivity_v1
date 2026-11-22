@@ -1,10 +1,11 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ScrollView, Text, TextInput, View } from 'react-native';
 import { DateTimeField } from '../../components/DateTimeField';
 import { fromPeople, PeopleEditor, toPerson, type Person } from '../../components/People';
-import { Button, colors } from '../../components/ui';
+import { Button } from '../../components/ui';
 import { createEvent, getMyName, listSquads, setMyName, type Squad } from '../../lib/social';
+import { makeStyles } from '../../theme';
 
 const tomorrowAt10 = () => {
   const d = new Date();
@@ -15,6 +16,7 @@ const tomorrowAt10 = () => {
 const toInt = (s: string) => (s.trim() ? Number.parseInt(s, 10) : null);
 
 export default function CreateActivity() {
+  const s = useStyles();
   const { squad } = useLocalSearchParams<{ squad?: string }>();
   const [squads, setSquads] = useState<Squad[]>([]);
   const [myName, setMyNameState] = useState<string | null>(null);
@@ -163,19 +165,19 @@ export default function CreateActivity() {
   );
 }
 
-const s = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   pad: { padding: 16, paddingBottom: 48 },
-  label: { fontSize: 15, fontWeight: '600', color: colors.muted, marginTop: 18, marginBottom: 6 },
-  muted: { color: colors.muted },
+  label: { fontSize: 15, fontWeight: '600', color: t.muted, marginTop: 18, marginBottom: 6 },
+  muted: { color: t.muted },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   input: {
     fontSize: 17,
     padding: 12,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.card,
-    color: colors.text,
+    borderColor: t.border,
+    backgroundColor: t.card,
+    color: t.text,
   },
-  error: { color: colors.danger, marginTop: 16, fontSize: 15 },
-});
+  error: { color: t.danger, marginTop: 16, fontSize: 15 },
+}));

@@ -1,10 +1,12 @@
 import * as Haptics from 'expo-haptics';
 import { useEffect, useState } from 'react';
-import { Animated, StyleSheet, Text, View } from 'react-native';
+import { Animated, Text, View } from 'react-native';
 import type { Stats } from '../core/tasks';
-import { Button, colors } from './ui';
+import { Button } from './ui';
+import { makeStyles } from '../theme';
 
 export function Celebration({ stats, onDone }: { stats: Stats; onDone: () => void }) {
+  const s = useStyles();
   const [scale] = useState(() => new Animated.Value(0.6));
 
   useEffect(() => {
@@ -30,15 +32,15 @@ export function Celebration({ stats, onDone }: { stats: Stats; onDone: () => voi
   );
 }
 
-const s = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   wrap: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     padding: 24,
-    backgroundColor: colors.bg,
+    backgroundColor: t.bg,
   },
   emoji: { fontSize: 72 },
-  title: { fontSize: 28, fontWeight: '700', color: colors.text, marginVertical: 12 },
-  line: { fontSize: 17, color: colors.muted, marginTop: 4 },
-});
+  title: { fontSize: 28, fontWeight: '700', color: t.text, marginVertical: 12 },
+  line: { fontSize: 17, color: t.muted, marginTop: 4 },
+}));

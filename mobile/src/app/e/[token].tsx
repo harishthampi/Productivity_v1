@@ -2,12 +2,14 @@
 // it claims the invite for the signed-in user and opens the event.
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { Linking, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Linking, Platform, ScrollView, Text, View } from 'react-native';
 import { RsvpActions } from '../../components/RsvpActions';
-import { Button, colors, formatWhen } from '../../components/ui';
+import { Button, formatWhen } from '../../components/ui';
 import { backendReady, claimInvite, getInviteByToken, type InviteSummary } from '../../lib/social';
+import { makeStyles } from '../../theme';
 
 export default function InviteLanding() {
+  const s = useStyles();
   const { token } = useLocalSearchParams<{ token: string }>();
   const [summary, setSummary] = useState<InviteSummary | null | undefined>(
     backendReady ? undefined : null,
@@ -81,18 +83,18 @@ export default function InviteLanding() {
   );
 }
 
-const s = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   pad: { padding: 20, gap: 6 },
-  kicker: { fontSize: 15, fontWeight: '600', color: colors.primary },
-  title: { fontSize: 26, fontWeight: '700', color: colors.text },
-  sub: { fontSize: 16, color: colors.muted },
+  kicker: { fontSize: 15, fontWeight: '600', color: t.primary },
+  title: { fontSize: 26, fontWeight: '700', color: t.text },
+  sub: { fontSize: 16, color: t.muted },
   banner: {
     marginTop: 28,
     padding: 14,
     gap: 10,
     borderRadius: 14,
-    backgroundColor: colors.card,
+    backgroundColor: t.card,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: t.border,
   },
-});
+}));

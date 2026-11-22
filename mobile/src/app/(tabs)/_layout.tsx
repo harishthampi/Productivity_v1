@@ -1,8 +1,8 @@
 import { Redirect, Tabs } from 'expo-router';
 import { Text, type ColorValue } from 'react-native';
-import { colors } from '../../components/ui';
 import { backendReady } from '../../lib/social';
 import { useStore } from '../../lib/store';
+import { useTheme } from '../../theme';
 
 const icon = (glyph: string) =>
   function TabIcon({ color }: { color: ColorValue }) {
@@ -10,13 +10,17 @@ const icon = (glyph: string) =>
   };
 
 export default function TabsLayout() {
+  const t = useTheme();
   const onboarded = useStore((s) => !!s.settings.onboarded);
   if (backendReady && !onboarded) return <Redirect href="/welcome" />;
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: colors.primary,
-        sceneStyle: { backgroundColor: colors.bg },
+        headerShown: false, // each tab draws its own large header, per the design
+        tabBarActiveTintColor: t.primary,
+        tabBarInactiveTintColor: t.muted,
+        tabBarStyle: { backgroundColor: t.card, borderTopColor: t.border },
+        sceneStyle: { backgroundColor: t.bg },
       }}
     >
       <Tabs.Screen name="index" options={{ title: 'Today', tabBarIcon: icon('◉') }} />

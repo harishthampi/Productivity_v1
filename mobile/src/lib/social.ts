@@ -169,7 +169,7 @@ export async function createEvent(
 }
 
 export async function listEvents(): Promise<{
-  hosting: Event[];
+  hosting: (Event & { invites: Invite[] })[];
   invited: (Event & { myInvite: Invite })[];
 }> {
   const uid = await me();
@@ -182,13 +182,24 @@ export async function listEvents(): Promise<{
       .neq('status', 'cancelled')
       .order('scheduled_at'),
   ) as Event[];
-  const mine = unwrap(
-    await db().from('event_invites').select('*').eq('invitee_user_id', uid),
-  ) as Invite[];
+  // RLS returns full rosters for events I host and only my own row for events I'm invited to.
+  const invites = events.length
+    ? (unwrap(
+        await db()
+          .from('event_invites')
+          .select('*')
+          .in(
+            'event_id',
+            events.map((e) => e.id),
+          ),
+      ) as Invite[])
+    : [];
   return {
-    hosting: events.filter((e) => e.owner_id === uid),
+    hosting: events
+      .filter((e) => e.owner_id === uid)
+      .map((e) => ({ ...e, invites: invites.filter((i) => i.event_id === e.id) })),
     invited: events.flatMap((e) => {
-      const myInvite = mine.find((i) => i.event_id === e.id);
+      const myInvite = invites.find((i) => i.event_id === e.id && i.invitee_user_id === uid);
       return e.owner_id !== uid && myInvite ? [{ ...e, myInvite }] : [];
     }),
   };

@@ -1,9 +1,8 @@
 import * as Notifications from 'expo-notifications';
-import { router, Stack } from 'expo-router';
+import { DarkTheme, DefaultTheme, router, Stack, ThemeProvider } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { AppState, Platform } from 'react-native';
-import { colors } from '../components/ui';
 import { isTerminal } from '../core/tasks';
 import {
   ACTIONS,
@@ -12,7 +11,15 @@ import {
   setupNotifications,
 } from '../lib/notifications';
 import { backendReady, registerPushToken } from '../lib/social';
-import { allTasks, getTask, reconcileExpired, resolveTask, syncNow } from '../lib/store';
+import { useTheme } from '../theme';
+import {
+  allTasks,
+  getSnoozes,
+  getTask,
+  reconcileExpired,
+  resolveTask,
+  syncNow,
+} from '../lib/store';
 
 const handled = new Set<string>();
 
@@ -48,12 +55,25 @@ async function onForeground() {
   const r = await Notifications.getLastNotificationResponseAsync().catch(() => null);
   if (r) handleResponse(r);
   reconcileExpired();
-  await resyncAllAlerts(allTasks());
+  await resyncAllAlerts(allTasks(), getSnoozes());
   void syncNow();
   if (backendReady) void registerPushToken();
 }
 
 export default function RootLayout() {
+  const t = useTheme();
+  const base = t.dark ? DarkTheme : DefaultTheme;
+  const navTheme = {
+    ...base,
+    colors: {
+      ...base.colors,
+      primary: t.primary,
+      background: t.bg,
+      card: t.bg,
+      text: t.text,
+      border: t.border,
+    },
+  };
   useEffect(() => {
     if (Platform.OS === 'web') return; // the web build only serves the /e/:token RSVP page
     void (async () => {
@@ -72,14 +92,22 @@ export default function RootLayout() {
   }, []);
 
   return (
-    <>
-      <StatusBar style="dark" />
-      <Stack screenOptions={{ contentStyle: { backgroundColor: colors.bg } }}>
+    <ThemeProvider value={navTheme}>
+      <StatusBar style="auto" />
+      <Stack
+        screenOptions={{ contentStyle: { backgroundColor: t.bg }, headerShadowVisible: false }}
+      >
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="task/[id]/edit" options={{ presentation: 'modal', title: 'Task' }} />
         <Stack.Screen
           name="task/[id]/checkin"
-          options={{ presentation: 'modal', title: 'Check-in' }}
+          options={{
+            presentation: 'formSheet',
+            headerShown: false,
+            sheetGrabberVisible: true,
+            sheetAllowedDetents: [0.92],
+            sheetCornerRadius: 24,
+          }}
         />
         <Stack.Screen name="event/new" options={{ presentation: 'modal', title: 'New Activity' }} />
         <Stack.Screen name="event/[id]" options={{ title: 'Event' }} />
@@ -88,6 +116,6 @@ export default function RootLayout() {
         <Stack.Screen name="welcome" options={{ headerShown: false, gestureEnabled: false }} />
         <Stack.Screen name="auth-callback" options={{ headerShown: false }} />
       </Stack>
-    </>
+    </ThemeProvider>
   );
 }

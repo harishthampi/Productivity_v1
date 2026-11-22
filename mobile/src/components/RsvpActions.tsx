@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { Text, View } from 'react-native';
 import { respond, type RsvpStatus } from '../lib/social';
 import { DateTimeField } from './DateTimeField';
-import { Button, colors, formatWhen } from './ui';
+import { Button, formatWhen } from './ui';
+import { useTheme } from '../theme';
 
 const STATUS_TEXT: Partial<Record<RsvpStatus, string>> = {
   invited: 'You haven’t answered yet.',
@@ -25,6 +26,7 @@ export function RsvpActions({
   scheduledAt: string;
   onDone: () => void;
 }) {
+  const t = useTheme();
   const [picking, setPicking] = useState(false);
   const base = new Date(scheduledAt).getTime() + 60 * 60_000;
   const [slots, setSlots] = useState<Date[]>([new Date(base)]);
@@ -47,7 +49,7 @@ export function RsvpActions({
 
   return (
     <View style={{ gap: 10 }}>
-      <Text style={{ fontSize: 16, color: colors.muted }} accessibilityLiveRegion="polite">
+      <Text style={{ fontSize: 16, color: t.muted }} accessibilityLiveRegion="polite">
         {STATUS_TEXT[status]}
         {status === 'time_change_requested' && proposed.length
           ? ` (${proposed.map((p) => formatWhen(p)).join(' or ')})`
@@ -66,9 +68,7 @@ export function RsvpActions({
         </>
       ) : (
         <>
-          <Text style={{ fontSize: 16, fontWeight: '600', color: colors.text }}>
-            Suggest 1–2 times
-          </Text>
+          <Text style={{ fontSize: 16, fontWeight: '600', color: t.text }}>Suggest 1–2 times</Text>
           {slots.map((d, i) => (
             <View key={i} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
               <DateTimeField
@@ -94,7 +94,7 @@ export function RsvpActions({
           <Button label="Back" onPress={() => setPicking(false)} />
         </>
       )}
-      {error && <Text style={{ color: colors.danger }}>{error}</Text>}
+      {error && <Text style={{ color: t.danger }}>{error}</Text>}
     </View>
   );
 }

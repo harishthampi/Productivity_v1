@@ -1,10 +1,11 @@
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import { Button, colors } from '../../../components/ui';
+import { Alert, ScrollView, Text, TextInput, View } from 'react-native';
+import { Button } from '../../../components/ui';
 import { DateTimeField } from '../../../components/DateTimeField';
 import { isTerminal, type PriorityTier } from '../../../core/tasks';
 import { addTask, deleteTask, getSettings, getTask, updateTask } from '../../../lib/store';
+import { makeStyles } from '../../../theme';
 
 const DELAYS: { label: string; value: number | null }[] = [
   { label: '15m', value: 15 },
@@ -22,6 +23,7 @@ const nextHalfHour = () => {
 const close = () => (router.canGoBack() ? router.back() : router.replace('/'));
 
 export default function EditTask() {
+  const s = useStyles();
   const { id } = useLocalSearchParams<{ id: string }>();
   const existing = id === 'new' ? undefined : getTask(id);
   const [title, setTitle] = useState(existing?.title ?? '');
@@ -131,18 +133,18 @@ export default function EditTask() {
   );
 }
 
-const s = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   pad: { padding: 16 },
-  label: { fontSize: 15, fontWeight: '600', color: colors.muted, marginTop: 18, marginBottom: 6 },
+  label: { fontSize: 15, fontWeight: '600', color: t.muted, marginTop: 18, marginBottom: 6 },
   input: {
     fontSize: 17,
     padding: 12,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.card,
-    color: colors.text,
+    borderColor: t.border,
+    backgroundColor: t.card,
+    color: t.text,
   },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  error: { color: colors.danger, marginTop: 16, fontSize: 15 },
-});
+  error: { color: t.danger, marginTop: 16, fontSize: 15 },
+}));

@@ -1,33 +1,44 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 import { Celebration } from '../../../components/Celebration';
-import { Button, colors, formatWhen } from '../../../components/ui';
 import { DateTimeField } from '../../../components/DateTimeField';
+import { Button, Card, Chip, formatTime, formatWhen } from '../../../components/ui';
 import { isTerminal, retryPresets } from '../../../core/tasks';
 import { getStats, resolveTask, useStore } from '../../../lib/store';
+import { makeStyles, tabular } from '../../../theme';
 
 const close = () => (router.canGoBack() ? router.back() : router.replace('/'));
+const LONG_LABEL: Record<string, string> = {
+  '+1 hr': '+1 hour',
+  '+3 hrs': '+3 hours',
+  'Tomorrow 10:00 AM': 'Tomorrow',
+};
 
-export default function Checkin() {
-  const { id, done, retry } = useLocalSearchParams<{ id: string; done?: string; retry?: string }>();
-  const task = useStore((s) => s.tasks.find((t) => t.id === id));
+export default function CheckinSheet() {
+  const s = useStyles();
+  const { id, done } = useLocalSearchParams<{ id: string; done?: string; retry?: string }>();
+  const task = useStore((st) => st.tasks.find((t) => t.id === id));
   const [celebrate, setCelebrate] = useState(done === '1' && task?.status === 'completed');
-  const [mode, setMode] = useState<'ask' | 'retry'>(retry === '1' ? 'retry' : 'ask');
+  const [presets] = useState(() => retryPresets(new Date()));
+  const [choice, setChoice] = useState<number | 'custom'>(0);
   const [custom, setCustom] = useState(() => new Date(Date.now() + 60 * 60_000));
   const [error, setError] = useState<string | null>(null);
+  const [openedAt] = useState(() => Date.now());
 
-  if (!task) return <Text style={s.pad}>Task not found.</Text>;
+  if (!task) return <Text style={[s.sub, s.pad]}>Task not found.</Text>;
   if (celebrate) return <Celebration stats={getStats()} onDone={close} />;
 
   if (isTerminal(task)) {
     return (
-      <View style={s.pad}>
+      <View style={[s.pad, { gap: 12 }]}>
         <Text style={s.title}>{task.title}</Text>
         <Text style={s.sub}>
-          {task.status === 'completed' ? 'Completed.' : 'Marked missed. Tomorrow is a fresh start.'}
+          {task.status === 'completed'
+            ? 'Completed. Nice follow-through.'
+            : 'Logged as missed. That’s useful data, not a verdict. Tomorrow is a fresh start.'}
         </Text>
-        <Button label="Close" kind="primary" onPress={close} style={{ marginTop: 24 }} />
+        <Button label="Close" kind="primary" onPress={close} />
       </View>
     );
   }
@@ -39,57 +50,87 @@ export default function Checkin() {
       setError((e as Error).message);
     }
   };
-  const retryAt = (at: Date) => act(() => (resolveTask(task.id, 'retry', at), close()));
+  const retryTime = choice === 'custom' ? custom : presets[choice].at;
+  const retryLabel = choice === 'custom' ? formatWhen(custom) : LONG_LABEL[presets[choice].label];
 
-  if (mode === 'retry') {
-    return (
-      <ScrollView contentContainerStyle={[s.pad, { gap: 10 }]}>
-        <Text style={s.title}>When will you try again?</Text>
-        {retryPresets(new Date()).map((p) => (
-          <Button
-            key={p.label}
-            label={`${p.label} · ${formatWhen(p.at)}`}
-            onPress={() => retryAt(p.at)}
-          />
-        ))}
-        <Text style={s.sub}>Or pick a time</Text>
-        <View style={{ alignItems: 'flex-start' }}>
-          <DateTimeField value={custom} onChange={setCustom} />
-        </View>
-        <Button label="Retry at this time" kind="primary" onPress={() => retryAt(custom)} />
-        {error && <Text style={s.error}>{error}</Text>}
-        <Button label="Back" onPress={() => setMode('ask')} />
-      </ScrollView>
-    );
-  }
+  const elapsed = Math.round((openedAt - Date.parse(task.scheduled_at)) / 60_000);
+  const context =
+    elapsed >= 0
+      ? `Scheduled for ${formatTime(task.scheduled_at)} · ${elapsed} min${elapsed === 1 ? '' : 's'} elapsed`
+      : `Starts at ${formatTime(task.scheduled_at)}`;
 
-  const due = task.checkin_due_at && new Date(task.checkin_due_at) <= new Date();
   return (
-    <View style={[s.pad, { gap: 12 }]}>
-      <Text style={s.title}>
-        {due
-          ? `${task.checkin_delay_mins} mins since "${task.title}" started. Did you complete it?`
-          : `Did you complete "${task.title}"?`}
+    <ScrollView contentContainerStyle={[s.pad, { gap: 14 }]} keyboardShouldPersistTaps="handled">
+      <Chip label={context} tone="primary" />
+      <Text style={s.title} accessibilityRole="header">
+        Did you complete “{task.title}”?
       </Text>
+      <Text style={s.sub}>
+        Calm follow-through. Be honest with your pace: momentum is built on accurate tracking, not
+        perfection.
+      </Text>
+
       <Button
-        label="Yes, Completed"
+        label="✓ Yes, Completed"
         kind="primary"
         onPress={() => act(() => (resolveTask(task.id, 'complete'), setCelebrate(true)))}
       />
-      <Button label="Retry Later" onPress={() => setMode('retry')} />
+
+      <Card>
+        <Text style={s.trayTitle}>Need more runway?</Text>
+        <View style={s.chips}>
+          {presets.map((p, i) => (
+            <Button
+              key={p.label}
+              label={`${LONG_LABEL[p.label]} (${formatTime(p.at)})`}
+              selected={choice === i}
+              onPress={() => setChoice(i)}
+              style={s.chip}
+            />
+          ))}
+          <Button
+            label="Custom"
+            selected={choice === 'custom'}
+            onPress={() => setChoice('custom')}
+            style={s.chip}
+          />
+        </View>
+        {choice === 'custom' && (
+          <View style={{ alignItems: 'flex-start' }}>
+            <DateTimeField value={custom} onChange={setCustom} />
+          </View>
+        )}
+        <Button
+          label={`Confirm Retry (${retryLabel})`}
+          onPress={() => act(() => (resolveTask(task.id, 'retry', retryTime), close()))}
+        />
+      </Card>
+
+      {error && (
+        <Text style={s.error} accessibilityLiveRegion="assertive">
+          {error}
+        </Text>
+      )}
+
       <Button
-        label="Mark Missed"
-        kind="danger"
+        label="Didn’t get to it (Mark Missed)"
+        kind="ghost"
         onPress={() => act(() => (resolveTask(task.id, 'miss'), close()))}
       />
-      {error && <Text style={s.error}>{error}</Text>}
-    </View>
+      <Text style={s.fine}>
+        Zero shaming. We log this calmly to help recalibrate your daily workload.
+      </Text>
+    </ScrollView>
   );
 }
 
-const s = StyleSheet.create({
-  pad: { padding: 20 },
-  title: { fontSize: 22, fontWeight: '700', color: colors.text, marginBottom: 8 },
-  sub: { fontSize: 16, color: colors.muted, marginTop: 8 },
-  error: { color: colors.danger, fontSize: 15 },
-});
+const useStyles = makeStyles((t) => ({
+  pad: { padding: 20, paddingTop: 28, paddingBottom: 40 },
+  title: { fontSize: 24, fontWeight: '800', color: t.text },
+  sub: { fontSize: 16, lineHeight: 22, color: t.muted },
+  trayTitle: { fontSize: 17, fontWeight: '700', color: t.text },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  chip: { minHeight: 40, paddingVertical: 8, paddingHorizontal: 12, borderRadius: 999, ...tabular },
+  error: { color: t.danger, fontSize: 15 },
+  fine: { fontSize: 13, color: t.muted, textAlign: 'center', marginTop: -6 },
+}));

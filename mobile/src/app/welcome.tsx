@@ -1,9 +1,9 @@
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Platform, ScrollView, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Button, colors } from '../components/ui';
+import { Button } from '../components/ui';
 import {
   sendEmailCode,
   signInWithApple,
@@ -12,10 +12,13 @@ import {
   type EmailMode,
 } from '../lib/auth';
 import { setOnboarded } from '../lib/store';
+import { makeStyles, useTheme } from '../theme';
 
 const done = () => router.replace('/');
 
 export default function Welcome() {
+  const s = useStyles();
+  const t = useTheme();
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
   const [mode, setMode] = useState<EmailMode | null>(null);
@@ -38,7 +41,7 @@ export default function Welcome() {
   const provider = (fn: () => Promise<boolean>) => run(fn, (ok) => ok && done());
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: t.bg }}>
       <ScrollView contentContainerStyle={s.pad} keyboardShouldPersistTaps="handled">
         <Text style={s.title}>PulsePlan</Text>
         <Text style={s.sub}>
@@ -127,20 +130,20 @@ export default function Welcome() {
   );
 }
 
-const s = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   pad: { padding: 24, paddingTop: 48 },
-  title: { fontSize: 34, fontWeight: '800', color: colors.text },
-  sub: { fontSize: 16, color: colors.muted, marginTop: 6 },
-  or: { textAlign: 'center', color: colors.muted, marginVertical: 20 },
+  title: { fontSize: 34, fontWeight: '800', color: t.text },
+  sub: { fontSize: 16, color: t.muted, marginTop: 6 },
+  or: { textAlign: 'center', color: t.muted, marginVertical: 20 },
   input: {
     fontSize: 17,
     padding: 12,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.card,
-    color: colors.text,
+    borderColor: t.border,
+    backgroundColor: t.card,
+    color: t.text,
   },
-  error: { color: colors.danger, marginTop: 16, fontSize: 15 },
-  fine: { fontSize: 13, color: colors.muted, marginTop: 10, textAlign: 'center' },
-});
+  error: { color: t.danger, marginTop: 16, fontSize: 15 },
+  fine: { fontSize: 13, color: t.muted, marginTop: 10, textAlign: 'center' },
+}));

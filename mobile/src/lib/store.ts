@@ -16,16 +16,24 @@ import {
   type TaskInput,
 } from '../core/tasks';
 import { enqueue, flush, type Mutation } from '../core/queue';
-import { cancelTaskAlerts, scheduleTaskAlerts } from './notifications';
+import { cancelTaskAlerts, scheduleSnoozeAlert, scheduleTaskAlerts } from './notifications';
 import { send } from './sync';
 
 type Settings = { defaultCheckinDelay: number | null; onboarded?: boolean };
-type State = { tasks: Task[]; logs: AttemptLog[]; queue: Mutation[]; settings: Settings };
+// snoozes: taskId → ISO time the check-in card reappears. Local-only, never synced.
+type State = {
+  tasks: Task[];
+  logs: AttemptLog[];
+  queue: Mutation[];
+  settings: Settings;
+  snoozes: Record<string, string>;
+};
 const KEY = 'pulseplan.state.v1';
 const EMPTY: State = {
   tasks: [],
   logs: [],
   queue: [],
+  snoozes: {},
   settings: { defaultCheckinDelay: DEFAULT_CHECKIN_DELAY_MINS },
 };
 
@@ -59,6 +67,16 @@ export const getTask = (id: string) => state.tasks.find((t) => t.id === id);
 export const getStats = () => computeStats(state.logs);
 export const getSettings = () => state.settings;
 export const pendingSyncCount = () => state.queue.length;
+export const getSnoozes = () => state.snoozes;
+
+/** Hides the check-in card and re-alerts in `mins`. The grace window (auto-miss) is unchanged. */
+export function snoozeCheckin(id: string, mins = 5) {
+  const task = getTask(id);
+  if (!task) return;
+  const until = new Date(Date.now() + mins * 60_000).toISOString();
+  set({ ...state, snoozes: { ...state.snoozes, [id]: until } });
+  void scheduleSnoozeAlert(task, until);
+}
 export const setDefaultCheckinDelay = (mins: number | null) =>
   set({ ...state, settings: { ...state.settings, defaultCheckinDelay: mins } });
 

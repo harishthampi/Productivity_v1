@@ -7,7 +7,11 @@ export const ACTIONS = { complete: 'COMPLETE', retry: 'RETRY', miss: 'MISSED' } 
 const CHANNEL = 'reminders';
 
 // Deterministic ids, so edit/delete/resync can cancel without storing anything.
-const ids = (taskId: string) => ({ start: `${taskId}.start`, checkin: `${taskId}.checkin` });
+const ids = (taskId: string) => ({
+  start: `${taskId}.start`,
+  checkin: `${taskId}.checkin`,
+  snooze: `${taskId}.snooze`,
+});
 
 export async function setupNotifications() {
   Notifications.setNotificationHandler({
@@ -58,9 +62,9 @@ export async function requestNotifications(): Promise<boolean> {
 }
 
 export async function cancelTaskAlerts(taskId: string) {
-  const { start, checkin } = ids(taskId);
+  const { start, checkin, snooze } = ids(taskId);
   await Promise.all(
-    [start, checkin].map((id) =>
+    [start, checkin, snooze].map((id) =>
       Notifications.cancelScheduledNotificationAsync(id).catch(() => {}),
     ),
   );
@@ -106,12 +110,29 @@ export async function scheduleTaskAlerts(task: Task, now = Date.now()) {
   }
 }
 
+/** One extra check-in alert after "Snooze 5m". */
+export async function scheduleSnoozeAlert(task: Task, atIso: string) {
+  if (isTerminal(task) || Date.parse(atIso) <= Date.now()) return;
+  await Notifications.cancelScheduledNotificationAsync(ids(task.id).snooze).catch(() => {});
+  await Notifications.scheduleNotificationAsync({
+    identifier: ids(task.id).snooze,
+    content: {
+      title: `Checking back in: "${task.title}"`,
+      body: 'Did you complete it?',
+      categoryIdentifier: CHECKIN_CATEGORY,
+      data: { taskId: task.id, stage: 'checkin' },
+    },
+    trigger: at(atIso),
+  }).catch((e) => console.warn('Could not schedule snooze', e));
+}
+
 /** Clears everything and reschedules from local state: removes ghost alerts and survives timezone changes. */
 // shortcut: iOS keeps only 64 pending local notifications (32 tasks); schedule nearest-first if users exceed that.
-export async function resyncAllAlerts(tasks: Task[]) {
+export async function resyncAllAlerts(tasks: Task[], snoozes: Record<string, string> = {}) {
   await Notifications.cancelAllScheduledNotificationsAsync().catch(() => {});
   const upcoming = tasks
     .filter((t) => !isTerminal(t))
     .sort((a, b) => a.scheduled_at.localeCompare(b.scheduled_at));
   for (const t of upcoming) await scheduleTaskAlerts(t);
+  for (const t of upcoming) if (snoozes[t.id]) await scheduleSnoozeAlert(t, snoozes[t.id]);
 }

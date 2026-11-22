@@ -1,8 +1,9 @@
 import { Contact } from 'expo-contacts';
 import { useState } from 'react';
-import { Platform, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Platform, Text, TextInput, View } from 'react-native';
 import type { InviteTier, Recipient } from '../lib/social';
-import { Button, colors } from './ui';
+import { Button } from './ui';
+import { makeStyles, useTheme } from '../theme';
 
 export type Person = Recipient & { key: string; tier: InviteTier | 'off' };
 
@@ -25,6 +26,8 @@ export function PeopleEditor({
   onChange: (p: Person[]) => void;
   allowOff?: boolean;
 }) {
+  const s = useStyles();
+  const t = useTheme();
   const [name, setName] = useState('');
   const [contact, setContact] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -102,32 +105,32 @@ export function PeopleEditor({
         />
         <Button label="Add person" onPress={addManual} />
       </View>
-      {error && <Text style={{ color: colors.danger }}>{error}</Text>}
+      {error && <Text style={{ color: t.danger }}>{error}</Text>}
     </View>
   );
 }
 
-const s = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
     padding: 10,
     borderRadius: 12,
-    backgroundColor: colors.card,
+    backgroundColor: t.card,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: t.border,
   },
-  name: { fontSize: 16, fontWeight: '600', color: colors.text },
-  muted: { color: colors.muted },
+  name: { fontSize: 16, fontWeight: '600', color: t.text },
+  muted: { color: t.muted },
   manual: { gap: 8, marginTop: 4 },
   input: {
     fontSize: 16,
     padding: 10,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.card,
-    color: colors.text,
+    borderColor: t.border,
+    backgroundColor: t.card,
+    color: t.text,
   },
-});
+}));
