@@ -43,5 +43,5 @@ The app offers Sign in with Apple, Google and a 6-digit email code. "Skip for no
 
 Data isn't sold or used for advertising. Data is encrypted in transit (HTTPS to Supabase). **Account deletion:** Profile → Account → Delete account removes the account and all its server data (`delete_my_account()`). Give this path in App Store Connect and Play Console. Play also needs a web link for deletion requests; until there is a web page for it, a support email works.
 
-## Before going public (not needed for TestFlight / internal testing)
-- An app icon and splash screen. The current ones are Expo's defaults in `mobile/assets/`.
+## App icon and splash
+The source is `mobile/assets/brand/mark.svg`, a pulse line that ends in a check. `mobile/assets/brand/render.js` regenerates every PNG (instructions are at the top of the file). The 1024px store icon is `mobile/assets/icon.png`.
