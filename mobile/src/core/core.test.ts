@@ -8,6 +8,8 @@ import {
   isExpired,
   resolveCheckin,
   retryPresets,
+  timeWindowStats,
+  windowOf,
   type AttemptLog,
 } from './tasks.ts';
 import { enqueue, flush, type Mutation } from './queue.ts';
@@ -116,4 +118,29 @@ test('queue dedupes by key and stops at first failure, preserving order', async 
     ['b', 'c'],
   );
   assert.deepEqual(await flush(left, async () => {}), []);
+});
+
+test('time windows: local-hour buckets, retries skipped, best needs 3+ samples', () => {
+  const at = (h: number, outcome: AttemptLog['outcome']) =>
+    ({ outcome, scheduled_at: new Date(2026, 10, 22, h).toISOString() }) as AttemptLog;
+  assert.equal(windowOf(new Date(2026, 10, 22, 4).toISOString()), 'Evening');
+  assert.equal(windowOf(new Date(2026, 10, 22, 5).toISOString()), 'Morning');
+  assert.equal(windowOf(new Date(2026, 10, 22, 12).toISOString()), 'Afternoon');
+  assert.equal(windowOf(new Date(2026, 10, 22, 17).toISOString()), 'Evening');
+  const logs = [
+    at(9, 'completed_on_time'),
+    at(10, 'failed_missed'),
+    at(11, 'completed_on_time'),
+    at(9, 'retried'),
+    at(14, 'completed_on_time'),
+    at(15, 'completed_on_time'), // 100% but only 2 samples
+    at(19, 'failed_missed'),
+    at(20, 'completed_late'),
+    at(21, 'completed_on_time'),
+  ];
+  const { by, best } = timeWindowStats(logs);
+  assert.deepEqual(by.Morning, { total: 3, onTime: 2 });
+  assert.deepEqual(by.Afternoon, { total: 2, onTime: 2 });
+  assert.equal(best, 'Morning');
+  assert.equal(timeWindowStats([]).best, null);
 });

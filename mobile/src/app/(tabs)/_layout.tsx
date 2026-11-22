@@ -17,6 +17,7 @@ export default function TabsLayout() {
     >
       <Tabs.Screen name="index" options={{ title: 'Today', tabBarIcon: icon('◉') }} />
       <Tabs.Screen name="plans" options={{ title: 'Plans', tabBarIcon: icon('☷') }} />
+      <Tabs.Screen name="profile" options={{ title: 'Profile', tabBarIcon: icon('◔') }} />
     </Tabs>
   );
 }

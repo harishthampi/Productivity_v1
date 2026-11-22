@@ -9,7 +9,9 @@ import { backendReady, claimInvite, getInviteByToken, type InviteSummary } from 
 
 export default function InviteLanding() {
   const { token } = useLocalSearchParams<{ token: string }>();
-  const [summary, setSummary] = useState<InviteSummary | null | undefined>(backendReady ? undefined : null);
+  const [summary, setSummary] = useState<InviteSummary | null | undefined>(
+    backendReady ? undefined : null,
+  );
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(

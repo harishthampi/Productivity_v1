@@ -3,8 +3,8 @@ import { useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Button, colors } from '../../../components/ui';
 import { DateTimeField } from '../../../components/DateTimeField';
-import { DEFAULT_CHECKIN_DELAY_MINS, isTerminal, type PriorityTier } from '../../../core/tasks';
-import { addTask, deleteTask, getTask, updateTask } from '../../../lib/store';
+import { isTerminal, type PriorityTier } from '../../../core/tasks';
+import { addTask, deleteTask, getSettings, getTask, updateTask } from '../../../lib/store';
 
 const DELAYS: { label: string; value: number | null }[] = [
   { label: '15m', value: 15 },
@@ -30,7 +30,7 @@ export default function EditTask() {
     existing ? new Date(existing.scheduled_at) : nextHalfHour(),
   );
   const [delay, setDelay] = useState<number | null>(
-    existing ? existing.checkin_delay_mins : DEFAULT_CHECKIN_DELAY_MINS,
+    existing ? existing.checkin_delay_mins : getSettings().defaultCheckinDelay,
   );
   const [priority, setPriority] = useState<PriorityTier>(existing?.priority_tier ?? 'standard');
   const [error, setError] = useState<string | null>(null);

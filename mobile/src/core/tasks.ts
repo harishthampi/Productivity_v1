@@ -208,3 +208,32 @@ export function computeStats(logs: AttemptLog[]): Stats {
   }
   return s;
 }
+
+export type TimeWindow = 'Morning' | 'Afternoon' | 'Evening';
+export const TIME_WINDOWS: TimeWindow[] = ['Morning', 'Afternoon', 'Evening'];
+// Device-local hour of the attempt's start time. Night (before 5am) folds into Evening.
+export const windowOf = (iso: string): TimeWindow => {
+  const h = new Date(iso).getHours();
+  return h >= 5 && h < 12 ? 'Morning' : h >= 12 && h < 17 ? 'Afternoon' : 'Evening';
+};
+const MIN_SAMPLE = 3; // don't crown a "best" window from one or two tasks
+
+/** On-time rate per time window over final outcomes (retries skipped), plus the best window once there's enough data. */
+export function timeWindowStats(logs: AttemptLog[]) {
+  const by = Object.fromEntries(TIME_WINDOWS.map((w) => [w, { total: 0, onTime: 0 }])) as Record<
+    TimeWindow,
+    { total: number; onTime: number }
+  >;
+  for (const l of logs) {
+    if (l.outcome === 'retried') continue;
+    const w = by[windowOf(l.scheduled_at)];
+    w.total++;
+    if (l.outcome === 'completed_on_time') w.onTime++;
+  }
+  let best: TimeWindow | null = null;
+  for (const w of TIME_WINDOWS) {
+    const rate = (x: TimeWindow) => by[x].onTime / by[x].total;
+    if (by[w].total >= MIN_SAMPLE && (best === null || rate(w) > rate(best))) best = w;
+  }
+  return { by, best };
+}

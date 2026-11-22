@@ -1,6 +1,6 @@
 # PulsePlan: agent guide
 
-Spec: [docs/PROJECT_SPECIFICATION.md](docs/PROJECT_SPECIFICATION.md). Schema and RLS: [docs/DATABASE.md](docs/DATABASE.md).
+Spec: [docs/PROJECT_SPECIFICATION.md](docs/PROJECT_SPECIFICATION.md). Schema and RLS: [docs/DATABASE.md](docs/DATABASE.md). Device QA: [docs/QA.md](docs/QA.md). Release: [docs/STORE_RELEASE.md](docs/STORE_RELEASE.md).
 
 ## Layout
 - `mobile/`: Expo (SDK 58) + TypeScript app. Read [mobile/AGENTS.md](mobile/AGENTS.md) before touching Expo APIs.

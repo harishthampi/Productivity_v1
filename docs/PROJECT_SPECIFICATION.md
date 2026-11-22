@@ -179,6 +179,6 @@ Event Completes (or 4 players accept)
 - [x] **3.4 Web RSVP Fallback & Push Alerts:** Build mobile-first `/e/:inviteToken` web page (Accept, Decline, Request Time Change) and server push triggers for invites, RSVPs, and approved time changes.
 
 ## Phase 4: Reliability Profile, QA & Store Submission
-- [ ] **4.1 Profile & Reliability Analytics:** Build `Profile` tab computing **Completed On-Time** vs. **Retried** vs. **Failed** counts/percentages, active streak, and best time-of-day completion insights.
-- [ ] **4.2 Full Test Suite & Device QA:** Execute all cases in `TESTING-GUIDE.md` across iOS and Android devices (offline sync, timezone shifts, force-quit notifications, gated invite security).
-- [ ] **4.3 Store Assets & Beta Release:** Configure App Store Connect and Google Play Console metadata, privacy disclosures, push certificates, and ship TestFlight / Internal Testing builds.
+- [x] **4.1 Profile & Reliability Analytics:** Build `Profile` tab computing **Completed On-Time** vs. **Retried** vs. **Failed** counts/percentages, active streak, and best time-of-day completion insights.
+- [ ] **4.2 Full Test Suite & Device QA:** Execute all cases in `TESTING-GUIDE.md` across iOS and Android devices (offline sync, timezone shifts, force-quit notifications, gated invite security). *(Prepared: automated coverage and device steps are in [QA.md](QA.md). Device runs pending.)*
+- [ ] **4.3 Store Assets & Beta Release:** Configure App Store Connect and Google Play Console metadata, privacy disclosures, push certificates, and ship TestFlight / Internal Testing builds. *(Prepared: `eas.json`, permissions and privacy answers are in [STORE_RELEASE.md](STORE_RELEASE.md). Needs your Apple and Google accounts.)*

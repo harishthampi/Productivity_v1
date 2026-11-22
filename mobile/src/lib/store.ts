@@ -4,6 +4,7 @@ import { useSyncExternalStore } from 'react';
 import {
   computeStats,
   createTask,
+  DEFAULT_CHECKIN_DELAY_MINS,
   editTask,
   isExpired,
   resolveCheckin,
@@ -16,9 +17,15 @@ import { enqueue, flush, type Mutation } from '../core/queue';
 import { cancelTaskAlerts, scheduleTaskAlerts } from './notifications';
 import { send } from './sync';
 
-type State = { tasks: Task[]; logs: AttemptLog[]; queue: Mutation[] };
+type Settings = { defaultCheckinDelay: number | null };
+type State = { tasks: Task[]; logs: AttemptLog[]; queue: Mutation[]; settings: Settings };
 const KEY = 'pulseplan.state.v1';
-const EMPTY: State = { tasks: [], logs: [], queue: [] };
+const EMPTY: State = {
+  tasks: [],
+  logs: [],
+  queue: [],
+  settings: { defaultCheckinDelay: DEFAULT_CHECKIN_DELAY_MINS },
+};
 
 function load(): State {
   const raw = globalThis.localStorage.getItem(KEY);
@@ -48,6 +55,9 @@ export const useStore = <T>(select: (s: State) => T): T =>
   useSyncExternalStore(subscribe, () => select(state));
 export const getTask = (id: string) => state.tasks.find((t) => t.id === id);
 export const getStats = () => computeStats(state.logs);
+export const getSettings = () => state.settings;
+export const setDefaultCheckinDelay = (mins: number | null) =>
+  set({ ...state, settings: { ...state.settings, defaultCheckinDelay: mins } });
 
 const uuid = () => Crypto.randomUUID();
 const upsertTask = (t: Task): Mutation => ({ key: uuid(), op: 'upsert_task', payload: t });
@@ -82,6 +92,7 @@ export function updateTask(id: string, input: TaskInput): Task {
 
 export function deleteTask(id: string) {
   set({
+    ...state,
     tasks: state.tasks.filter((t) => t.id !== id),
     logs: state.logs.filter((l) => l.task_id !== id), // matches the server's on delete cascade
     queue: enqueue(state.queue, { key: uuid(), op: 'delete_task', payload: { id } }),
@@ -96,6 +107,7 @@ export function resolveTask(id: string, action: CheckinAction, retryAt?: Date) {
   if (!old) throw new Error('Task not found');
   const { task, log } = resolveCheckin(old, action, new Date(), uuid(), retryAt);
   set({
+    ...state,
     tasks: replace(state.tasks, task),
     logs: [...state.logs, log],
     queue: enqueue(enqueue(state.queue, upsertTask(task)), insertLog(log)),
