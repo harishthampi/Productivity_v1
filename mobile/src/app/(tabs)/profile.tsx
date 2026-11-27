@@ -351,7 +351,7 @@ function NameRow() {
 }
 
 const useStyles = makeStyles((t) => ({
-  screen: { flex: 1, backgroundColor: t.bg },
+  screen: { flex: 1 },
   content: { padding: 16, gap: 12, paddingBottom: 40 },
   h1: { fontSize: 34, fontWeight: '800', color: t.text, marginTop: 12 },
   muted: { fontSize: 13, color: t.muted },
@@ -362,7 +362,7 @@ const useStyles = makeStyles((t) => ({
   gauge: { fontSize: 40, fontWeight: '800', color: t.text, ...tabular },
   gaugeLabel: { fontSize: 15, fontWeight: '600', color: t.text },
   columns: { flexDirection: 'row', gap: 8, marginTop: 4 },
-  column: { flex: 1, backgroundColor: t.bg, borderRadius: 12, padding: 10, gap: 2 },
+  column: { flex: 1, backgroundColor: t.card, borderRadius: 12, padding: 10, gap: 2 },
   colValue: { fontSize: 22, fontWeight: '800', color: t.text, ...tabular },
   colLabel: { fontSize: 13, fontWeight: '600', color: t.text, ...tabular },
   streak: { fontSize: 32, fontWeight: '800', color: t.text, ...tabular },

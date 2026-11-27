@@ -71,7 +71,7 @@ This master document contains the complete technical requirements, application f
 5. **Celebration Overlay:** Lightweight animated confirmation with haptic feedback showing updated on-time completion count and streak.
 6. **Plans & Squads Hub (Tab 2):** Segmented view for **Upcoming Plans** (*Hosting* & *Invited*) and **My Squads** (saved friend subsets).
 7. **Create Activity Screen:** Form for activity title, date/time, optional location, optional quorum/spot cap, and **Recipient Picker** (select a saved Squad, toggle Primary vs. Bench members, or pick contacts).
-8. **Event Detail & Negotiation Screen:** Shows event time/location, live RSVP roster (*Accepted*, *Declined*, *Time Change Requested*, *Bench*), owner controls to **Approve/Reject Proposed Time** or **Invite Next Bench Member**, and per-invitee share actions.
+8. **Event Detail & Negotiation Screen:** Shows event time/location, live RSVP roster (*Accepted*, *Declined*, *Time Change Requested*, *Bench*), owner controls to **Approve/Reject Proposed Time** or **Invite Next Bench Member**, and per-invitee share actions, plus **Text pending invites**: one pre-filled SMS per invitee with a phone number (the OS requires a tap on Send for each; links are per-person tokens, so no group text).
 9. **Web RSVP Landing Page (`/e/:inviteToken`):** Mobile-responsive web view for non-app recipients displaying event summary and 3 action buttons: **Accept**, **Decline**, **Request Time Change** (1–2 slot picker), followed by an app install/deep-link banner.
 10. **Profile & Reliability Screen (Tab 3):** Visual breakdown of **On-Time Completed** vs. **Retried** vs. **Failed**, time-of-day completion chart, and notification/account settings.
 

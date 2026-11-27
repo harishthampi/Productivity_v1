@@ -28,6 +28,7 @@ Backend: a Supabase project with both migrations applied (`npx supabase db push`
 | TC-03 | retry logs attempt 1, schedules attempt 2 | Tap **Retry Later**, then **+1 hr**. | The task shows "attempt 2" at the new time and both alerts fire again. Profile shows Retried +1. |
 | TC-04 | `isExpired` after 60 min grace; miss → failed | Ignore a check-in for 61+ min, then open the app. | The task shows as Missed and Profile shows Missed +1, counted once. |
 | TC-05 | `rls.test.mjs` TC-05 | Squad of 10: set 4 Primary, 2 Bench, 4 Not invited. Create the activity. | Only the 6 chosen people appear on the roster. Only the 4 Primary people get shareable links. |
+| TC-05b | manual | Host an activity with 3 invitees picked from contacts (2 phones, 1 email), none replied. Tap **Text 2 pending invites**. | Messages opens twice, each pre-filled with that person's own link. Cancelling the first stops the rest. Hidden on web and on devices without SMS. |
 | TC-06 | `rls.test.mjs` TC-06 | Open `<web>/e/garbage` in a phone browser. | It shows "Invite not found". A valid link shows only the title, time, place, organizer and your own reply. |
 | TC-07 | `social.test.mjs` TC-07 | Guest requests 11:00 on the web page. Host taps **Approve 11:00**. | The event moves to 11:00, other guests show "Waiting for reply", and guests with the app get a "moved" push. |
 | TC-08 | `social.test.mjs` TC-08 | A Primary guest declines. Host taps **Invite Next Bench Member**. | Bench #1 moves to "Waiting for reply" and gets a push if they have the app. Their link now works. |

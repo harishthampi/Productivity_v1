@@ -1,5 +1,6 @@
 import { Stack, useLocalSearchParams } from 'expo-router';
-import { useCallback, useState } from 'react';
+import * as SMS from 'expo-sms';
+import { useCallback, useEffect, useState } from 'react';
 import { ScrollView, Share, Text, View } from 'react-native';
 import { RsvpActions } from '../../components/RsvpActions';
 import {
@@ -35,6 +36,8 @@ const STATUS: Record<Invite['rsvp_status'], [string, Tone]> = {
   bench: ['Bench', 'missed'],
 };
 
+const isPhone = (ref: string | null): ref is string => !!ref && /^\+?[\d\s().-]{6,}$/.test(ref);
+
 const diffLabel = (from: string, to: string) => {
   const mins = Math.round((Date.parse(to) - Date.parse(from)) / 60_000);
   if (mins === 0) return 'same time';
@@ -54,6 +57,10 @@ export default function EventDetail() {
   const load = useCallback(() => getEvent(id), [id]);
   const { data, error, refresh } = useLive(load, id);
   const [msg, setMsg] = useState<string | null>(null);
+  const [canText, setCanText] = useState(false);
+  useEffect(() => {
+    SMS.isAvailableAsync().then(setCanText, () => {});
+  }, []);
 
   const run = (fn: () => Promise<unknown>) => () =>
     void fn().then(
@@ -106,10 +113,19 @@ export default function EventDetail() {
     (event.max_spots == null ||
       invites.filter((i) => !['bench', 'declined'].includes(i.rsvp_status)).length <
         event.max_spots);
-  const share = (i: Invite) =>
-    void Share.share({
-      message: `${event.title}, ${formatWhen(event.scheduled_at)}. Tap to reply: ${inviteLink(i.invite_token)}`,
-    });
+  const message = (i: Invite) =>
+    `${event.title}\n${formatWhen(event.scheduled_at)}\nReply here: ${inviteLink(i.invite_token)}`;
+  const share = (i: Invite) => void Share.share({ message: message(i) });
+  // Each invite link is a private token, so every friend gets their own pre-filled text; the OS needs one tap on Send each.
+  const textable = invites.filter(
+    (i) => i.rsvp_status === 'invited' && isPhone(i.invitee_contact_ref),
+  );
+  const textAll = async () => {
+    for (const i of textable) {
+      const { result } = await SMS.sendSMSAsync([i.invitee_contact_ref!], message(i));
+      if (result === 'cancelled') break;
+    }
+  };
 
   return (
     <ScrollView contentContainerStyle={s.pad}>
@@ -170,6 +186,13 @@ export default function EventDetail() {
 
       <Card>
         <Label>Attendees</Label>
+        {canText && textable.length > 0 && (
+          <Button
+            label={`✉ Text ${textable.length} pending invite${textable.length > 1 ? 's' : ''}`}
+            kind="primary"
+            onPress={() => void textAll().catch((e: Error) => setMsg(e.message))}
+          />
+        )}
         <View style={s.person}>
           <Avatar name="You" />
           <Text style={s.name}>You</Text>

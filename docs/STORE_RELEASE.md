@@ -6,7 +6,7 @@ The repo is configured for release. The remaining steps need your Apple and Goog
 - **Identifiers:** `app.json` uses bundle identifier and package `com.pulseplan.app`. **This is a placeholder: change it to a reverse domain you own before the first build.** It can't be changed after release.
 - **Build profiles:** `eas.json` has `development` (dev client), `preview` (internal install) and `production` (store build, build number increments automatically).
 - **Permissions:**
-  - Contacts is read-only, with a usage description. `WRITE_CONTACTS` is blocked on Android.
+  - Contacts is read-only, with a usage description. `WRITE_CONTACTS` is blocked on Android. Typing a name searches contacts on the device (asks for access on the first search); only people you add are saved.
   - Notifications are local, plus push once an EAS project exists.
   - `SCHEDULE_EXACT_ALARM` is declared for on-time reminders on Android 12–13.
 - `ITSAppUsesNonExemptEncryption: false` (the app only uses standard HTTPS).

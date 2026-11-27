@@ -9,7 +9,7 @@ import {
   type TextInputProps,
   type ViewStyle,
 } from 'react-native';
-import { makeStyles, radius, tabular, useTheme, type Theme } from '../theme';
+import { glass, makeStyles, radius, tabular, useTheme, type Theme } from '../theme';
 
 export const formatWhen = (d: Date | string) =>
   new Date(d).toLocaleString([], {
@@ -190,10 +190,9 @@ const useStyles = makeStyles((t) => ({
   btnTextGhost: { color: t.muted, fontWeight: '500' },
   btnTextDanger: { color: t.danger },
   card: {
-    backgroundColor: t.card,
     borderWidth: 1,
-    borderColor: t.border,
     borderRadius: radius,
+    ...glass(t),
     padding: 16,
     gap: 10,
   },

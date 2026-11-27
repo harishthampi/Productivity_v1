@@ -227,7 +227,7 @@ function SquadCard({ squad }: { squad: Squad }) {
 }
 
 const useStyles = makeStyles((t) => ({
-  screen: { flex: 1, backgroundColor: t.bg },
+  screen: { flex: 1 },
   content: { padding: 16, gap: 12, paddingBottom: 40 },
   headerRow: {
     flexDirection: 'row',

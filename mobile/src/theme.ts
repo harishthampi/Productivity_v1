@@ -1,16 +1,20 @@
 // Two themes from the design spec: "Clarity & Momentum" (light) and "Obsidian Amber" (dark).
 // Text-on-color pairs are picked for WCAG AA (≥4.5:1); the raw accent hues are used for fills, borders and icons.
 import { useMemo } from 'react';
-import { StyleSheet, useColorScheme } from 'react-native';
+import { Platform, StyleSheet, useColorScheme } from 'react-native';
 
 export const light = {
   dark: false,
   bg: '#F8F9FA',
   bgTint: '#EFF4FF',
-  card: '#FFFFFF',
-  border: '#E5E7EB',
+  card: 'rgba(255, 255, 255, 0.62)', // frosted glass over the backdrop wash
+  border: 'rgba(15, 23, 42, 0.14)', // inputs, buttons, dividers
+  glassEdge: 'rgba(255, 255, 255, 0.9)', // bright rim on glass cards
+  shadow: '0 8px 24px rgba(30, 41, 89, 0.08)',
+  backdrop:
+    'radial-gradient(circle at 100% 0%, rgba(37, 99, 235, 0.18), transparent 55%), radial-gradient(circle at 0% 100%, rgba(139, 92, 246, 0.18), transparent 60%)',
   text: '#0F172A',
-  muted: '#64748B',
+  muted: '#526075', // darker than slate-500 so it stays >=4.5:1 on tinted glass
   inactive: '#CBD5E1',
   primary: '#2563EB', // Cobalt
   onPrimary: '#FFFFFF',
@@ -36,8 +40,12 @@ export const dark: Theme = {
   dark: true,
   bg: '#0E0E12', // Pitch obsidian
   bgTint: '#16161B',
-  card: '#131317',
-  border: '#26262B',
+  card: 'rgba(255, 255, 255, 0.06)',
+  border: 'rgba(255, 255, 255, 0.14)',
+  glassEdge: 'rgba(255, 255, 255, 0.12)',
+  shadow: '0 8px 24px rgba(0, 0, 0, 0.35)',
+  backdrop:
+    'radial-gradient(circle at 100% 0%, rgba(249, 115, 22, 0.2), transparent 55%), radial-gradient(circle at 0% 100%, rgba(124, 58, 237, 0.16), transparent 60%)',
   text: '#F4F4F5',
   muted: '#A1A1AA',
   inactive: '#39393D',
@@ -60,6 +68,18 @@ export const dark: Theme = {
 };
 
 export const radius = 16;
+
+/** Card surface: translucent fill + glass edge; on web also a real backdrop blur. */
+export const glass = (t: Theme) => ({
+  backgroundColor: t.card,
+  borderColor: t.glassEdge,
+  boxShadow: t.shadow,
+  // Native has no backdrop blur; the soft gradient wash behind the glass stands in for it.
+  ...(Platform.OS === 'web' ? ({ backdropFilter: 'blur(20px)' } as object) : {}),
+});
+
+/** Screen background: base colour plus the gradient wash the glass sits on. */
+export const backdrop = (t: Theme) => ({ backgroundColor: t.bg, backgroundImage: t.backdrop });
 export const tabular = { fontVariant: ['tabular-nums' as const] };
 
 export const useTheme = (): Theme => (useColorScheme() === 'dark' ? dark : light);

@@ -39,7 +39,7 @@
       [
         "expo-contacts",
         {
-          "contactsPermission": "PulsePlan reads the contacts you pick so you can invite them to plans."
+          "contactsPermission": "PulsePlan searches your contacts as you type a name, so you can invite friends to plans. Only the people you invite are saved."
         }
       ],
       "expo-web-browser",

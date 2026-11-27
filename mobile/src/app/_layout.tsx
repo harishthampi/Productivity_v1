@@ -11,7 +11,7 @@ import {
   setupNotifications,
 } from '../lib/notifications';
 import { backendReady, registerPushToken } from '../lib/social';
-import { useTheme } from '../theme';
+import { backdrop, useTheme } from '../theme';
 import {
   allTasks,
   getSnoozes,
@@ -94,9 +94,7 @@ export default function RootLayout() {
   return (
     <ThemeProvider value={navTheme}>
       <StatusBar style="auto" />
-      <Stack
-        screenOptions={{ contentStyle: { backgroundColor: t.bg }, headerShadowVisible: false }}
-      >
+      <Stack screenOptions={{ contentStyle: backdrop(t), headerShadowVisible: false }}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="task/[id]/edit" options={{ presentation: 'modal', title: 'Task' }} />
         <Stack.Screen

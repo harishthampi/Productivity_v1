@@ -1,9 +1,43 @@
-import { Contact } from 'expo-contacts';
-import { useState } from 'react';
-import { Platform, Text, TextInput, View } from 'react-native';
+import { Contact, ContactField, requestPermissionsAsync } from 'expo-contacts';
+import { useEffect, useState } from 'react';
+import { Platform, Pressable, Text, TextInput, View } from 'react-native';
 import type { InviteTier, Recipient } from '../lib/social';
 import { Button } from './ui';
 import { makeStyles, useTheme } from '../theme';
+
+type Suggestion = { id: string; name: string; ref: string | null };
+const FIELDS = [ContactField.FULL_NAME, ContactField.PHONES, ContactField.EMAILS] as const;
+
+/** Contacts whose name matches what's typed. Asks for contacts access on the first search; denied = no suggestions. */
+function useContactSearch(query: string) {
+  const [results, setResults] = useState<Suggestion[]>([]);
+  const q = Platform.OS === 'web' ? '' : query.trim();
+  useEffect(() => {
+    if (q.length < 2) return;
+    let live = true;
+    const timer = setTimeout(async () => {
+      try {
+        if (!(await requestPermissionsAsync()).granted) return;
+        const found = await Contact.getAllDetails(FIELDS, { name: q, limit: 5 });
+        if (!live) return;
+        setResults(
+          found.map((c) => ({
+            id: c.id,
+            name: c.fullName || q,
+            ref: c.phones?.[0]?.number ?? c.emails?.[0]?.address ?? null,
+          })),
+        );
+      } catch {
+        // Suggestions are a convenience; the picker and manual entry still work.
+      }
+    }, 250);
+    return () => {
+      live = false;
+      clearTimeout(timer);
+    };
+  }, [q]);
+  return q.length < 2 ? [] : results;
+}
 
 export type Person = Recipient & { key: string; tier: InviteTier | 'off' };
 
@@ -31,6 +65,9 @@ export function PeopleEditor({
   const [name, setName] = useState('');
   const [contact, setContact] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const suggestions = useContactSearch(name).filter(
+    (c) => !people.some((p) => p.display_name === c.name && p.contact_ref === c.ref),
+  );
 
   const cycle = (p: Person) => {
     const order: Person['tier'][] = allowOff ? ['primary', 'bench', 'off'] : ['primary', 'bench'];
@@ -96,6 +133,22 @@ export function PeopleEditor({
           accessibilityLabel="Name"
           style={s.input}
         />
+        {suggestions.map((c) => (
+          <Pressable
+            key={c.id}
+            accessibilityRole="button"
+            accessibilityLabel={`Add ${c.name} from contacts`}
+            onPress={() => {
+              add(c.name, c.ref);
+              setName('');
+              setError(null);
+            }}
+            style={({ pressed }) => [s.suggestion, pressed && { opacity: 0.6 }]}
+          >
+            <Text style={s.name}>{c.name}</Text>
+            {!!c.ref && <Text style={s.muted}>{c.ref}</Text>}
+          </Pressable>
+        ))}
         <TextInput
           value={contact}
           onChangeText={setContact}
@@ -124,6 +177,14 @@ const useStyles = makeStyles((t) => ({
   name: { fontSize: 16, fontWeight: '600', color: t.text },
   muted: { color: t.muted },
   manual: { gap: 8, marginTop: 4 },
+  suggestion: {
+    minHeight: 48,
+    justifyContent: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 12,
+    backgroundColor: t.primarySoft,
+  },
   input: {
     fontSize: 16,
     padding: 10,

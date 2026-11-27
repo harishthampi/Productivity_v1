@@ -15,7 +15,7 @@ import {
 import { deriveStatus, isTerminal, type AttemptLog, type Task } from '../../core/tasks';
 import { notificationsAllowed } from '../../lib/notifications';
 import { resolveTask, snoozeCheckin, useStore } from '../../lib/store';
-import { makeStyles, tabular, useTheme } from '../../theme';
+import { glass, makeStyles, tabular, useTheme } from '../../theme';
 
 function useNow(everyMs = 30_000) {
   const [now, setNow] = useState(() => new Date());
@@ -278,7 +278,7 @@ function CheckinCard({ task, now }: { task: Task; now: Date }) {
 }
 
 const useStyles = makeStyles((t) => ({
-  screen: { flex: 1, backgroundColor: t.bg },
+  screen: { flex: 1 },
   content: { padding: 16, paddingBottom: 120, gap: 8 },
   brandRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   brand: { fontSize: 16, fontWeight: '700', color: t.text },
@@ -306,7 +306,7 @@ const useStyles = makeStyles((t) => ({
     borderColor: t.glow,
   },
   checkCard: {
-    backgroundColor: t.card,
+    ...glass(t),
     borderRadius: 16,
     borderWidth: 1,
     borderColor: t.retry,
@@ -330,12 +330,11 @@ const useStyles = makeStyles((t) => ({
   dot: { width: 10, height: 10, borderRadius: 5, backgroundColor: t.primary, marginTop: 20 },
   dotDone: { backgroundColor: t.inactive },
   dotPending: { backgroundColor: t.retry },
-  railLine: { flex: 1, width: 2, backgroundColor: t.border, marginTop: 4 },
+  railLine: { flex: 1, width: 2, backgroundColor: t.inactive, marginTop: 4 },
   feedCard: {
     flex: 1,
-    backgroundColor: t.card,
+    ...glass(t),
     borderWidth: 1,
-    borderColor: t.border,
     borderRadius: 16,
     padding: 14,
     gap: 8,

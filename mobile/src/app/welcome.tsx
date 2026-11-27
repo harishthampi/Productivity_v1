@@ -12,7 +12,7 @@ import {
   type EmailMode,
 } from '../lib/auth';
 import { setOnboarded } from '../lib/store';
-import { makeStyles, useTheme } from '../theme';
+import { backdrop, makeStyles, useTheme } from '../theme';
 
 const done = () => router.replace('/');
 
@@ -41,7 +41,7 @@ export default function Welcome() {
   const provider = (fn: () => Promise<boolean>) => run(fn, (ok) => ok && done());
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: t.bg }}>
+    <SafeAreaView style={{ flex: 1, ...backdrop(t) }}>
       <ScrollView contentContainerStyle={s.pad} keyboardShouldPersistTaps="handled">
         <Text style={s.title}>PulsePlan</Text>
         <Text style={s.sub}>

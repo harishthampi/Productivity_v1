@@ -2,7 +2,7 @@ import { Redirect, Tabs } from 'expo-router';
 import { Text, type ColorValue } from 'react-native';
 import { backendReady } from '../../lib/social';
 import { useStore } from '../../lib/store';
-import { useTheme } from '../../theme';
+import { backdrop, useTheme } from '../../theme';
 
 const icon = (glyph: string) =>
   function TabIcon({ color }: { color: ColorValue }) {
@@ -20,7 +20,7 @@ export default function TabsLayout() {
         tabBarActiveTintColor: t.primary,
         tabBarInactiveTintColor: t.muted,
         tabBarStyle: { backgroundColor: t.card, borderTopColor: t.border },
-        sceneStyle: { backgroundColor: t.bg },
+        sceneStyle: backdrop(t),
       }}
     >
       <Tabs.Screen name="index" options={{ title: 'Today', tabBarIcon: icon('◉') }} />
