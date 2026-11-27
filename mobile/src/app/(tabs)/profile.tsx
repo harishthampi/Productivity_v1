@@ -77,13 +77,9 @@ export default function Profile() {
     });
 
   const columns = [
-    {
-      label: 'On-time',
-      n: month.onTime,
-      note: month.late ? `+${month.late} late` : 'Right on pace',
-    },
-    { label: 'Retried', n: month.retried, note: 'Adaptive pacing' },
-    { label: 'Missed', n: month.failed, note: 'Recalibrated' },
+    { label: 'On time', n: month.onTime, note: month.late ? `+${month.late} late` : '' },
+    { label: 'Retried', n: month.retried, note: '' },
+    { label: 'Missed', n: month.failed, note: '' },
   ];
 
   return (
@@ -116,7 +112,7 @@ export default function Profile() {
                 <Text style={s.colLabel}>
                   {c.label} · {pct(c.n, attempts)}%
                 </Text>
-                <Text style={s.muted}>{c.note}</Text>
+                {!!c.note && <Text style={s.muted}>{c.note}</Text>}
               </View>
             ))}
           </View>
@@ -128,7 +124,6 @@ export default function Profile() {
             {allTime.streak} <Text style={s.streakUnit}>on time in a row</Text>
           </Text>
           <StreakDots logs={lastSeven} />
-          <Text style={s.quote}>“Consistency is about honest loops, not rigid perfection.”</Text>
         </Card>
 
         <Card>
@@ -139,7 +134,7 @@ export default function Profile() {
             return (
               <View
                 key={w}
-                style={{ gap: 6 }}
+                style={{ gap: 8 }}
                 accessible
                 accessibilityLabel={
                   total
@@ -153,7 +148,8 @@ export default function Profile() {
                   </Text>
                   <Text style={s.rhythmValue}>{total ? `${rate}%` : 'No data'}</Text>
                 </View>
-                <Progress value={rate / 100} />
+                {/* One accent per chart: only the peak window gets it. */}
+                <Progress value={rate / 100} tone={w === best ? 'primary' : 'missed'} />
                 {w === best && <Text style={s.peak}>Peak focus</Text>}
               </View>
             );
@@ -178,16 +174,12 @@ export default function Profile() {
             ))}
           </View>
           <NotificationRow />
-          <Button
-            label="Export Accountability Log (CSV)"
-            onPress={exportLog}
-            disabled={logs.length === 0}
-          />
+          <Button label="Export log as CSV" onPress={exportLog} disabled={logs.length === 0} />
         </Card>
 
         {backendReady && <NameRow />}
         <AccountSection />
-        <Text style={[s.muted, { textAlign: 'center' }]}>Only you can see these numbers.</Text>
+        <Text style={[s.muted, { textAlign: 'center' }]}>Only you can see these numbers</Text>
       </ScrollView>
     </SafeAreaView>
   );
@@ -353,29 +345,28 @@ function NameRow() {
 const useStyles = makeStyles((t) => ({
   screen: { flex: 1 },
   content: { padding: 16, gap: 12, paddingBottom: 40 },
-  h1: { fontSize: 34, fontWeight: '800', color: t.text, marginTop: 12 },
+  h1: { fontSize: 32, fontWeight: '600', color: t.text, marginTop: 12 },
   muted: { fontSize: 13, color: t.muted },
   error: { fontSize: 14, color: t.danger },
   identity: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  idName: { fontSize: 19, fontWeight: '700', color: t.text },
+  idName: { fontSize: 20, fontWeight: '600', color: t.text },
   gaugeRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  gauge: { fontSize: 40, fontWeight: '800', color: t.text, ...tabular },
-  gaugeLabel: { fontSize: 15, fontWeight: '600', color: t.text },
-  columns: { flexDirection: 'row', gap: 8, marginTop: 4 },
-  column: { flex: 1, backgroundColor: t.card, borderRadius: 12, padding: 10, gap: 2 },
-  colValue: { fontSize: 22, fontWeight: '800', color: t.text, ...tabular },
-  colLabel: { fontSize: 13, fontWeight: '600', color: t.text, ...tabular },
-  streak: { fontSize: 32, fontWeight: '800', color: t.text, ...tabular },
-  streakUnit: { fontSize: 15, fontWeight: '600', color: t.muted },
+  gauge: { fontSize: 40, fontWeight: '500', color: t.text, ...tabular },
+  gaugeLabel: { fontSize: 15, fontWeight: '500', color: t.text },
+  columns: { flexDirection: 'row', gap: 12, marginTop: 4 },
+  column: { flex: 1, gap: 4 },
+  colValue: { fontSize: 24, fontWeight: '500', color: t.text, ...tabular },
+  colLabel: { fontSize: 13, color: t.muted, ...tabular },
+  streak: { fontSize: 32, fontWeight: '500', color: t.text, ...tabular },
+  streakUnit: { fontSize: 15, color: t.muted },
   dots: { flexDirection: 'row', gap: 8 },
-  dotItem: { width: 18, height: 18, borderRadius: 9, borderWidth: 2 },
-  quote: { fontSize: 14, fontStyle: 'italic', color: t.muted },
+  dotItem: { width: 16, height: 16, borderRadius: 8, borderWidth: 2 },
   rhythmHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
-  rhythmName: { fontSize: 15, fontWeight: '600', color: t.text },
-  rhythmValue: { fontSize: 15, fontWeight: '700', color: t.text, ...tabular },
-  peak: { fontSize: 13, fontWeight: '600', color: t.successText },
-  rowTitle: { fontSize: 15, fontWeight: '600', color: t.text },
+  rhythmName: { fontSize: 15, fontWeight: '500', color: t.text },
+  rhythmValue: { fontSize: 15, fontWeight: '500', color: t.text, ...tabular },
+  peak: { fontSize: 13, fontWeight: '500', color: t.primaryText },
+  rowTitle: { fontSize: 15, fontWeight: '500', color: t.text },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  chip: { minHeight: 40, paddingVertical: 8, borderRadius: 999 },
+  chip: { minHeight: 40, paddingVertical: 8 },
   notifRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
 }));

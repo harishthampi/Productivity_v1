@@ -48,7 +48,7 @@ export function RsvpActions({
   };
 
   return (
-    <View style={{ gap: 10 }}>
+    <View style={{ gap: 12 }}>
       <Text style={{ fontSize: 16, color: t.muted }} accessibilityLiveRegion="polite">
         {STATUS_TEXT[status]}
         {status === 'time_change_requested' && proposed.length
@@ -64,7 +64,7 @@ export function RsvpActions({
             onPress={() => !busy && send('accepted')}
           />
           <Button label="Decline" onPress={() => !busy && send('declined')} />
-          <Button label="Request Time Change" onPress={() => setPicking(true)} />
+          <Button label="Request time change" onPress={() => setPicking(true)} />
         </>
       ) : (
         <>
@@ -76,13 +76,18 @@ export function RsvpActions({
                 onChange={(nd) => setSlots(slots.map((x, j) => (j === i ? nd : x)))}
               />
               {slots.length > 1 && (
-                <Button label="✕" onPress={() => setSlots(slots.filter((_, j) => j !== i))} />
+                <Button
+                  label="Remove"
+                  kind="ghost"
+                  accessibilityLabel={`Remove time ${i + 1}`}
+                  onPress={() => setSlots(slots.filter((_, j) => j !== i))}
+                />
               )}
             </View>
           ))}
           {slots.length < 2 && (
             <Button
-              label="+ Another time"
+              label="Add another time"
               onPress={() => setSlots([...slots, new Date(base + 60 * 60_000)])}
             />
           )}

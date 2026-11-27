@@ -1,9 +1,10 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ScrollView, Text, TextInput, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { DateTimeField } from '../../components/DateTimeField';
+import { FormScroll } from '../../components/FormScroll';
 import { fromPeople, PeopleEditor, toPerson, type Person } from '../../components/People';
-import { Button } from '../../components/ui';
+import { Button, Field } from '../../components/ui';
 import { createEvent, getMyName, listSquads, setMyName, type Squad } from '../../lib/social';
 import { makeStyles } from '../../theme';
 
@@ -78,60 +79,55 @@ export default function CreateActivity() {
   };
 
   return (
-    <ScrollView contentContainerStyle={s.pad} keyboardShouldPersistTaps="handled">
+    <FormScroll contentContainerStyle={s.pad}>
       {myName === '' && (
         <>
           <Text style={s.label}>Your name (shown on invites)</Text>
-          <TextInput
+          <Field
             value={nameInput}
             onChangeText={setNameInput}
             placeholder="e.g. Sam"
             accessibilityLabel="Your name"
-            style={s.input}
           />
         </>
       )}
       <Text style={s.label}>Activity</Text>
-      <TextInput
+      <Field
         value={title}
         onChangeText={setTitle}
-        placeholder="e.g. Badminton Doubles"
+        placeholder="e.g. Badminton doubles"
         accessibilityLabel="Activity title"
-        style={s.input}
       />
       <Text style={s.label}>When</Text>
       <View style={{ alignItems: 'flex-start' }}>
         <DateTimeField value={when} onChange={setWhen} />
       </View>
       <Text style={s.label}>Location (optional)</Text>
-      <TextInput
+      <Field
         value={location}
         onChangeText={setLocation}
         placeholder="e.g. Downtown courts"
         accessibilityLabel="Location"
-        style={s.input}
       />
       <View style={{ flexDirection: 'row', gap: 12 }}>
         <View style={{ flex: 1 }}>
           <Text style={s.label}>Max spots</Text>
-          <TextInput
+          <Field
             value={spots}
             onChangeText={setSpots}
             keyboardType="number-pad"
             placeholder="Any"
             accessibilityLabel="Max spots"
-            style={s.input}
           />
         </View>
         <View style={{ flex: 1 }}>
           <Text style={s.label}>Min to go ahead</Text>
-          <TextInput
+          <Field
             value={quorum}
             onChangeText={setQuorum}
             keyboardType="number-pad"
             placeholder="Any"
             accessibilityLabel="Minimum quorum"
-            style={s.input}
           />
         </View>
       </View>
@@ -148,36 +144,29 @@ export default function CreateActivity() {
           />
         ))}
       </View>
-      <Text style={s.label}>
-        Recipients · {primaryCount} primary{spots ? ` of ${spots} spots` : ''} · tap a tier to
-        change
+      <Text style={s.label}>Recipients</Text>
+      <Text style={s.hint}>
+        {primaryCount} primary{spots ? ` of ${spots} spots` : ''} · tap a tier to change it
       </Text>
       <PeopleEditor people={people} onChange={setPeople} allowOff />
 
       {error && <Text style={s.error}>{error}</Text>}
       <Button
-        label={busy ? 'Creating…' : 'Create & get invite links'}
+        label={busy ? 'Creating…' : 'Create and get invite links'}
         kind="primary"
         onPress={() => !busy && create()}
         style={{ marginTop: 24 }}
       />
-    </ScrollView>
+    </FormScroll>
   );
 }
 
 const useStyles = makeStyles((t) => ({
   pad: { padding: 16, paddingBottom: 48 },
-  label: { fontSize: 15, fontWeight: '600', color: t.muted, marginTop: 18, marginBottom: 6 },
+  // Label sits closer to its own field (8) than to the field above (24), as in the task editor.
+  label: { fontSize: 15, fontWeight: '500', color: t.muted, marginTop: 24, marginBottom: 8 },
+  hint: { fontSize: 14, color: t.muted, marginBottom: 8, fontVariant: ['tabular-nums'] },
   muted: { color: t.muted },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  input: {
-    fontSize: 17,
-    padding: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: t.border,
-    backgroundColor: t.card,
-    color: t.text,
-  },
   error: { color: t.danger, marginTop: 16, fontSize: 15 },
 }));

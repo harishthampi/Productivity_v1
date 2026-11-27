@@ -1,8 +1,9 @@
 import { Contact, ContactField, requestPermissionsAsync } from 'expo-contacts';
 import { useEffect, useState } from 'react';
-import { Platform, Pressable, Text, TextInput, View } from 'react-native';
+import { Platform, Pressable, Text, View } from 'react-native';
 import type { InviteTier, Recipient } from '../lib/social';
-import { Button } from './ui';
+import { useRevealEnd } from './FormScroll';
+import { Button, Field } from './ui';
 import { makeStyles, useTheme } from '../theme';
 
 type Suggestion = { id: string; name: string; ref: string | null };
@@ -68,6 +69,11 @@ export function PeopleEditor({
   const suggestions = useContactSearch(name).filter(
     (c) => !people.some((p) => p.display_name === c.name && p.contact_ref === c.ref),
   );
+  const revealEnd = useRevealEnd();
+  const shown = suggestions.length;
+  useEffect(() => {
+    if (shown) revealEnd?.(); // suggestions push the Name field down; keep it above the keyboard
+  }, [shown, revealEnd]);
 
   const cycle = (p: Person) => {
     const order: Person['tier'][] = allowOff ? ['primary', 'bench', 'off'] : ['primary', 'bench'];
@@ -118,21 +124,16 @@ export function PeopleEditor({
             onPress={() => cycle(p)}
           />
           <Button
-            label="✕"
+            label="Remove"
+            kind="ghost"
+            accessibilityLabel={`Remove ${p.display_name}`}
             onPress={() => onChange(people.filter((x) => x.key !== p.key))}
-            style={{ paddingHorizontal: 12 }}
+            style={{ paddingHorizontal: 8 }}
           />
         </View>
       ))}
-      {Platform.OS !== 'web' && <Button label="+ From contacts" onPress={pickContact} />}
+      {Platform.OS !== 'web' && <Button label="Add from contacts" onPress={pickContact} />}
       <View style={s.manual}>
-        <TextInput
-          value={name}
-          onChangeText={setName}
-          placeholder="Name"
-          accessibilityLabel="Name"
-          style={s.input}
-        />
         {suggestions.map((c) => (
           <Pressable
             key={c.id}
@@ -149,12 +150,18 @@ export function PeopleEditor({
             {!!c.ref && <Text style={s.muted}>{c.ref}</Text>}
           </Pressable>
         ))}
-        <TextInput
+        <Field
+          value={name}
+          onChangeText={setName}
+          onFocus={() => revealEnd?.()}
+          placeholder="Name (type to search contacts)"
+          accessibilityLabel="Name"
+        />
+        <Field
           value={contact}
           onChangeText={setContact}
           placeholder="Phone or email (optional)"
           accessibilityLabel="Phone or email"
-          style={s.input}
         />
         <Button label="Add person" onPress={addManual} />
       </View>
@@ -168,13 +175,13 @@ const useStyles = makeStyles((t) => ({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    padding: 10,
+    padding: 12,
     borderRadius: 12,
     backgroundColor: t.card,
     borderWidth: 1,
     borderColor: t.border,
   },
-  name: { fontSize: 16, fontWeight: '600', color: t.text },
+  name: { fontSize: 16, fontWeight: '500', color: t.text },
   muted: { color: t.muted },
   manual: { gap: 8, marginTop: 4 },
   suggestion: {
@@ -183,15 +190,8 @@ const useStyles = makeStyles((t) => ({
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 12,
-    backgroundColor: t.primarySoft,
-  },
-  input: {
-    fontSize: 16,
-    padding: 10,
-    borderRadius: 12,
+    backgroundColor: t.card,
     borderWidth: 1,
     borderColor: t.border,
-    backgroundColor: t.card,
-    color: t.text,
   },
 }));

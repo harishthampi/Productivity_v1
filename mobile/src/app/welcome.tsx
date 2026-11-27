@@ -1,9 +1,9 @@
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Platform, ScrollView, Text, TextInput, View } from 'react-native';
+import { Platform, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Button } from '../components/ui';
+import { Button, Field } from '../components/ui';
 import {
   sendEmailCode,
   signInWithApple,
@@ -43,13 +43,16 @@ export default function Welcome() {
   return (
     <SafeAreaView style={{ flex: 1, ...backdrop(t) }}>
       <ScrollView contentContainerStyle={s.pad} keyboardShouldPersistTaps="handled">
-        <Text style={s.title}>PulsePlan</Text>
+        <View style={s.brandRow}>
+          <View style={s.brandMark} />
+          <Text style={s.title}>PulsePlan</Text>
+        </View>
         <Text style={s.sub}>
           Reminders that check in 30 minutes later, and plans with the friends you actually play
           with.
         </Text>
 
-        <View style={{ gap: 10, marginTop: 28 }}>
+        <View style={{ gap: 12, marginTop: 32 }}>
           {Platform.OS === 'ios' ? (
             <AppleAuthentication.AppleAuthenticationButton
               buttonType={AppleAuthentication.AppleAuthenticationButtonType.CONTINUE}
@@ -66,8 +69,8 @@ export default function Welcome() {
 
         <Text style={s.or}>or with email</Text>
         {mode === null ? (
-          <View style={{ gap: 10 }}>
-            <TextInput
+          <View style={{ gap: 12 }}>
+            <Field
               value={email}
               onChangeText={setEmail}
               placeholder="you@example.com"
@@ -75,7 +78,6 @@ export default function Welcome() {
               autoComplete="email"
               keyboardType="email-address"
               accessibilityLabel="Email"
-              style={s.input}
             />
             <Button
               label="Email me a code"
@@ -89,16 +91,15 @@ export default function Welcome() {
             />
           </View>
         ) : (
-          <View style={{ gap: 10 }}>
+          <View style={{ gap: 12 }}>
             <Text style={s.sub}>Enter the 6-digit code we sent to {email.trim()}.</Text>
-            <TextInput
+            <Field
               value={code}
               onChangeText={setCode}
-              placeholder="123456"
+              placeholder="6-digit code"
               keyboardType="number-pad"
               autoComplete="one-time-code"
               accessibilityLabel="Code"
-              style={s.input}
             />
             <Button
               label="Verify"
@@ -132,18 +133,11 @@ export default function Welcome() {
 
 const useStyles = makeStyles((t) => ({
   pad: { padding: 24, paddingTop: 48 },
-  title: { fontSize: 34, fontWeight: '800', color: t.text },
-  sub: { fontSize: 16, color: t.muted, marginTop: 6 },
+  brandRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  brandMark: { width: 12, height: 12, borderRadius: 6, backgroundColor: t.primary },
+  title: { fontSize: 32, fontWeight: '600', color: t.text },
+  sub: { fontSize: 16, color: t.muted, marginTop: 8 },
   or: { textAlign: 'center', color: t.muted, marginVertical: 20 },
-  input: {
-    fontSize: 17,
-    padding: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: t.border,
-    backgroundColor: t.card,
-    color: t.text,
-  },
   error: { color: t.danger, marginTop: 16, fontSize: 15 },
-  fine: { fontSize: 13, color: t.muted, marginTop: 10, textAlign: 'center' },
+  fine: { fontSize: 13, color: t.muted, marginTop: 12, textAlign: 'center' },
 }));

@@ -1,7 +1,7 @@
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { Alert, ScrollView, Text, TextInput, View } from 'react-native';
-import { Button } from '../../../components/ui';
+import { Alert, ScrollView, Text, View } from 'react-native';
+import { Button, Field } from '../../../components/ui';
 import { DateTimeField } from '../../../components/DateTimeField';
 import { isTerminal, type PriorityTier } from '../../../core/tasks';
 import { addTask, deleteTask, getSettings, getTask, updateTask } from '../../../lib/store';
@@ -37,9 +37,9 @@ export default function EditTask() {
   const [priority, setPriority] = useState<PriorityTier>(existing?.priority_tier ?? 'standard');
   const [error, setError] = useState<string | null>(null);
 
-  if (id !== 'new' && !existing) return <Text style={s.pad}>Task not found.</Text>;
+  if (id !== 'new' && !existing) return <Text style={[s.pad, s.muted]}>Task not found.</Text>;
   if (existing && isTerminal(existing))
-    return <Text style={s.pad}>This task is finished and can’t be edited.</Text>;
+    return <Text style={[s.pad, s.muted]}>This task is finished and can’t be edited.</Text>;
 
   const save = () => {
     const input = {
@@ -66,16 +66,15 @@ export default function EditTask() {
 
   return (
     <>
-      <Stack.Screen options={{ title: existing ? 'Edit Task' : 'New Task' }} />
+      <Stack.Screen options={{ title: existing ? 'Edit task' : 'New task' }} />
       <ScrollView contentContainerStyle={s.pad} keyboardShouldPersistTaps="handled">
         <Text style={s.label}>Title</Text>
-        <TextInput
+        <Field
           value={title}
           onChangeText={setTitle}
-          placeholder="e.g. Submit Report"
+          placeholder="e.g. Submit the report"
           autoFocus={!existing}
           accessibilityLabel="Task title"
-          style={s.input}
         />
 
         <Text style={s.label}>When</Text>
@@ -103,20 +102,20 @@ export default function EditTask() {
             onPress={() => setPriority('standard')}
           />
           <Button
-            label="★ Focus"
+            label="Focus"
             selected={priority === 'focus'}
             onPress={() => setPriority('focus')}
           />
         </View>
 
         <Text style={s.label}>Notes</Text>
-        <TextInput
+        <Field
           value={notes}
           onChangeText={setNotes}
           placeholder="Optional"
           multiline
           accessibilityLabel="Notes"
-          style={[s.input, { minHeight: 80 }]}
+          style={{ minHeight: 80 }}
         />
 
         {error && (
@@ -135,16 +134,9 @@ export default function EditTask() {
 
 const useStyles = makeStyles((t) => ({
   pad: { padding: 16 },
-  label: { fontSize: 15, fontWeight: '600', color: t.muted, marginTop: 18, marginBottom: 6 },
-  input: {
-    fontSize: 17,
-    padding: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: t.border,
-    backgroundColor: t.card,
-    color: t.text,
-  },
+  // Label sits closer to its own field (8) than to the field above (24).
+  label: { fontSize: 15, fontWeight: '500', color: t.muted, marginTop: 24, marginBottom: 8 },
+  muted: { fontSize: 15, color: t.muted },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   error: { color: t.danger, marginTop: 16, fontSize: 15 },
 }));

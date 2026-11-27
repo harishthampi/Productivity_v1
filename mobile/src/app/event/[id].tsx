@@ -76,7 +76,7 @@ export default function EventDetail() {
     <Card>
       <Text style={s.title}>{event.title}</Text>
       <Text style={s.when}>{formatWhen(event.scheduled_at)}</Text>
-      {!!event.location_text && <Text style={s.muted}>📍 {event.location_text}</Text>}
+      {!!event.location_text && <Text style={s.muted}>{event.location_text}</Text>}
     </Card>
   );
 
@@ -143,12 +143,13 @@ export default function EventDetail() {
                 {formatWhen(p)} · {diffLabel(event.scheduled_at, p)}
               </Text>
               <Button
-                label={`✓ Approve ${formatTime(p)} (updates everyone)`}
+                label={`Approve ${formatTime(p)}`}
                 kind="primary"
                 onPress={run(() => approveTimeChange(i.id, p))}
               />
             </View>
           ))}
+          <Text style={s.muted}>Approving moves the plan for everyone invited</Text>
           <Button
             label={`Keep ${formatTime(event.scheduled_at)}`}
             onPress={run(() => rejectTimeChange(i.id))}
@@ -160,7 +161,7 @@ export default function EventDetail() {
         <Label>Quorum</Label>
         <Text style={s.quorum}>
           {accepted.length} / {target} confirmed
-          <Text style={s.muted}>{needed ? ` · need ${needed} more` : ' · locked in ✓'}</Text>
+          <Text style={s.quorumNote}>{needed ? ` · need ${needed} more` : ' · locked in'}</Text>
         </Text>
         <Progress
           value={target ? accepted.length / target : 0}
@@ -175,7 +176,7 @@ export default function EventDetail() {
             Invite {bench[0].invitee_display_name}, first on the bench?
           </Text>
           <Button
-            label="Invite Bench #1"
+            label={`Invite ${bench[0].invitee_display_name}`}
             kind="primary"
             onPress={run(() => promoteNextBench(event.id))}
           />
@@ -188,15 +189,17 @@ export default function EventDetail() {
         <Label>Attendees</Label>
         {canText && textable.length > 0 && (
           <Button
-            label={`✉ Text ${textable.length} pending invite${textable.length > 1 ? 's' : ''}`}
+            label={`Text ${textable.length} pending invite${textable.length > 1 ? 's' : ''}`}
             kind="primary"
             onPress={() => void textAll().catch((e: Error) => setMsg(e.message))}
           />
         )}
         <View style={s.person}>
           <Avatar name="You" />
-          <Text style={s.name}>You</Text>
-          <Chip label="Host" tone="primary" />
+          <View style={{ flex: 1, gap: 4 }}>
+            <Text style={s.name}>You</Text>
+            <Text style={s.muted}>Host</Text>
+          </View>
         </View>
         {roster.map((i) => {
           const [label, tone] = STATUS[i.rsvp_status];
@@ -244,7 +247,7 @@ function SaveAsSquad({ event, accepted }: { event: Event; accepted: Invite[] }) 
   const full = event.max_spots != null && accepted.length >= event.max_spots;
   const past = new Date(event.scheduled_at) < new Date();
   if (!accepted.length || !(full || past)) return null;
-  if (state === 'saved') return <Text style={s.muted}>Saved to My Squads ✓</Text>;
+  if (state === 'saved') return <Text style={s.muted}>Saved to your squads</Text>;
 
   const save = async () => {
     try {
@@ -267,7 +270,7 @@ function SaveAsSquad({ event, accepted }: { event: Event; accepted: Invite[] }) 
 
   return (
     <Card>
-      <Text style={s.alertTitle}>Save these {accepted.length} players as a Squad?</Text>
+      <Text style={s.alertTitle}>Save these {accepted.length} players as a squad?</Text>
       {state === 'idle' ? (
         <Button label="Save" kind="primary" onPress={() => setState('naming')} />
       ) : (
@@ -289,15 +292,17 @@ function SaveAsSquad({ event, accepted }: { event: Event; accepted: Invite[] }) 
 
 const useStyles = makeStyles((t) => ({
   pad: { padding: 16, gap: 12, paddingBottom: 40 },
-  title: { fontSize: 24, fontWeight: '800', color: t.text },
+  title: { fontSize: 24, fontWeight: '600', color: t.text },
   when: { fontSize: 15, color: t.muted, ...tabular },
   muted: { fontSize: 14, color: t.muted },
   error: { fontSize: 14, color: t.danger },
-  alert: { borderColor: t.retry, backgroundColor: t.retrySoft },
+  // Needs-attention cards: amber hairline on the normal surface, like Today's check-in card.
+  alert: { borderColor: t.retry },
   alertBody: { fontSize: 14, color: t.text },
-  alertTitle: { fontSize: 17, fontWeight: '700', color: t.text },
-  quorum: { fontSize: 18, fontWeight: '700', color: t.text, ...tabular },
-  person: { flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 48 },
-  name: { fontSize: 16, fontWeight: '600', color: t.text },
-  rank: { width: 28, fontSize: 15, fontWeight: '700', color: t.muted, ...tabular },
+  alertTitle: { fontSize: 17, fontWeight: '600', color: t.text },
+  quorum: { fontSize: 24, fontWeight: '500', color: t.text, ...tabular },
+  quorumNote: { fontSize: 15, fontWeight: '400', color: t.muted },
+  person: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 48 },
+  name: { fontSize: 16, fontWeight: '500', color: t.text },
+  rank: { width: 28, fontSize: 15, fontWeight: '500', color: t.muted, ...tabular },
 }));

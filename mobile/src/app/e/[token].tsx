@@ -4,9 +4,9 @@ import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { Linking, Platform, ScrollView, Text, View } from 'react-native';
 import { RsvpActions } from '../../components/RsvpActions';
-import { Button, formatWhen } from '../../components/ui';
+import { Button, Card, formatWhen } from '../../components/ui';
 import { backendReady, claimInvite, getInviteByToken, type InviteSummary } from '../../lib/social';
-import { makeStyles } from '../../theme';
+import { makeStyles, tabular } from '../../theme';
 
 export default function InviteLanding() {
   const s = useStyles();
@@ -35,11 +35,11 @@ export default function InviteLanding() {
     );
   }, [token, load]);
 
-  if (summary === undefined) return <Text style={s.pad}>Loading…</Text>;
+  if (summary === undefined) return <Text style={[s.pad, s.sub]}>Loading…</Text>;
   if (!summary) {
     return (
       <View style={s.pad}>
-        <Stack.Screen options={{ title: 'Invite' }} />
+        <Stack.Screen options={{ title: 'Invite', headerShown: Platform.OS !== 'web' }} />
         <Text style={s.title}>Invite not found</Text>
         <Text style={s.sub}>
           {error ?? 'This link is invalid or no longer active. Ask the organizer for a new one.'}
@@ -52,11 +52,18 @@ export default function InviteLanding() {
     <ScrollView
       contentContainerStyle={[s.pad, { maxWidth: 520, width: '100%', alignSelf: 'center' }]}
     >
-      <Stack.Screen options={{ title: 'Invite' }} />
+      <Stack.Screen options={{ title: 'Invite', headerShown: Platform.OS !== 'web' }} />
+      {/* Web visitors may never have heard of the app; the in-app header already says where they are. */}
+      {Platform.OS === 'web' && (
+        <View style={s.brandRow}>
+          <View style={s.brandMark} />
+          <Text style={s.brand}>PulsePlan</Text>
+        </View>
+      )}
       <Text style={s.kicker}>{summary.owner_display_name || 'A friend'} invited you</Text>
       <Text style={s.title}>{summary.title}</Text>
-      <Text style={s.sub}>{formatWhen(summary.scheduled_at)}</Text>
-      {!!summary.location_text && <Text style={s.sub}>📍 {summary.location_text}</Text>}
+      <Text style={[s.sub, tabular]}>{formatWhen(summary.scheduled_at)}</Text>
+      {!!summary.location_text && <Text style={s.sub}>{summary.location_text}</Text>}
       {summary.event_status !== 'active' ? (
         <Text style={s.sub}>This plan is {summary.event_status}.</Text>
       ) : (
@@ -71,30 +78,24 @@ export default function InviteLanding() {
         </View>
       )}
       {Platform.OS === 'web' && (
-        <View style={s.banner}>
+        <Card style={{ marginTop: 32 }}>
           <Text style={s.sub}>Get reminders and keep your squads in the PulsePlan app.</Text>
           <Button
             label="Open in app"
             onPress={() => void Linking.openURL(`pulseplan://e/${token}`)}
           />
-        </View>
+        </Card>
       )}
     </ScrollView>
   );
 }
 
 const useStyles = makeStyles((t) => ({
-  pad: { padding: 20, gap: 6 },
-  kicker: { fontSize: 15, fontWeight: '600', color: t.primary },
-  title: { fontSize: 26, fontWeight: '700', color: t.text },
+  pad: { padding: 24, gap: 8 },
+  brandRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 24 },
+  brandMark: { width: 8, height: 8, borderRadius: 4, backgroundColor: t.primary },
+  brand: { fontSize: 16, fontWeight: '600', color: t.text },
+  kicker: { fontSize: 15, fontWeight: '500', color: t.primaryText },
+  title: { fontSize: 28, fontWeight: '600', color: t.text },
   sub: { fontSize: 16, color: t.muted },
-  banner: {
-    marginTop: 28,
-    padding: 14,
-    gap: 10,
-    borderRadius: 14,
-    backgroundColor: t.card,
-    borderWidth: 1,
-    borderColor: t.border,
-  },
 }));

@@ -1,21 +1,12 @@
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Animated, AppState, Linking, Pressable, ScrollView, Text, View } from 'react-native';
+import { AppState, Linking, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import {
-  Button,
-  Card,
-  Chip,
-  formatTime,
-  formatWhen,
-  Progress,
-  useReducedMotion,
-  type Tone,
-} from '../../components/ui';
+import { Button, Card, Chip, formatTime, formatWhen, Progress, type Tone } from '../../components/ui';
 import { deriveStatus, isTerminal, type AttemptLog, type Task } from '../../core/tasks';
 import { notificationsAllowed } from '../../lib/notifications';
 import { resolveTask, snoozeCheckin, useStore } from '../../lib/store';
-import { glass, makeStyles, tabular, useTheme } from '../../theme';
+import { glass, makeStyles, tabular } from '../../theme';
 
 function useNow(everyMs = 30_000) {
   const [now, setNow] = useState(() => new Date());
@@ -117,6 +108,19 @@ export default function TodayHub() {
     const terminal = isTerminal(t);
     const [label, tone] = statusChip(t, now, lastLog(t.id), t.id === nextId);
     const pendingNow = deriveStatus(t, now) === 'checkin_pending';
+    const meta = [
+      t.priority_tier === 'focus' && 'Focus',
+      t.attempt_number > 1 && !terminal && `Attempt ${t.attempt_number}`,
+      t.checkin_delay_mins != null && !terminal && `+${t.checkin_delay_mins}m check`,
+    ].filter(Boolean);
+    // Rail dot: accent = up next / in progress, amber = check-in waiting, grey = later, hollow = done.
+    const dotStyle = terminal
+      ? s.dotDone
+      : tone === 'retry'
+        ? s.dotPending
+        : tone === 'primary'
+          ? null
+          : s.dotLater;
     return (
       <View key={t.id} style={s.feedRow}>
         <Text style={[s.feedTime, terminal && s.dim]}>
@@ -124,7 +128,7 @@ export default function TodayHub() {
           {formatTime(t.scheduled_at)}
         </Text>
         <View style={s.rail}>
-          <View style={[s.dot, terminal ? s.dotDone : pendingNow ? s.dotPending : null]} />
+          <View style={[s.dot, dotStyle]} />
           <View style={s.railLine} />
         </View>
         <Pressable
@@ -139,17 +143,11 @@ export default function TodayHub() {
           </Text>
           <View style={s.metaRow}>
             <Chip label={label} tone={tone} />
-            {t.priority_tier === 'focus' && <Chip label="★ Focus" tone="primary" />}
-            {t.attempt_number > 1 && !terminal && (
-              <Chip label={`Attempt ${t.attempt_number}`} tone="retry" />
-            )}
-            {t.checkin_delay_mins != null && !terminal && (
-              <Text style={s.meta}>+{t.checkin_delay_mins}m check</Text>
-            )}
+            {meta.length > 0 && <Text style={s.meta}>{meta.join(' · ')}</Text>}
           </View>
           {!terminal && (
             <Button
-              label="✓ Done"
+              label="Done"
               kind="ghost"
               onPress={() => quickComplete(t)}
               style={s.doneBtn}
@@ -164,9 +162,8 @@ export default function TodayHub() {
     <SafeAreaView edges={['top']} style={s.screen}>
       <ScrollView contentContainerStyle={s.content}>
         <View style={s.brandRow}>
-          <Text style={s.brand}>
-            <Text style={s.brandMark}>◉ </Text>PulsePlan
-          </Text>
+          <View style={s.brandMark} />
+          <Text style={s.brand}>PulsePlan</Text>
         </View>
 
         <Text style={s.h1}>Today</Text>
@@ -175,7 +172,7 @@ export default function TodayHub() {
           {timezoneLabel(now)}
         </Text>
 
-        <Card style={{ marginTop: 14 }}>
+        <Card style={{ marginTop: 12 }}>
           <View style={s.velocityRow}>
             <Text style={s.velocity}>{Math.round(velocity * 100)}%</Text>
             <Text style={s.velocityLabel}>Velocity</Text>
@@ -205,7 +202,7 @@ export default function TodayHub() {
         <Text style={s.h2}>Today’s pacts</Text>
         {todayFeed.length === 0 && (
           <Text style={s.empty}>
-            Nothing scheduled. Tap “New Task” to make a pact with yourself.
+            Nothing scheduled. Tap “New task” to make a pact with yourself.
           </Text>
         )}
         {todayFeed.map((t) => row(t))}
@@ -220,44 +217,22 @@ export default function TodayHub() {
         onPress={() => openEdit('new')}
         style={({ pressed }) => [s.fab, pressed && { transform: [{ scale: 0.96 }] }]}
       >
-        <Text style={s.fabText}>＋ New Task</Text>
+        <Text style={s.fabText}>New task</Text>
       </Pressable>
     </SafeAreaView>
   );
 }
 
-/** The active 30-minute check-in, with a slow breathing glow (static when Reduce Motion is on). */
+/** The active check-in: marked by the amber rail dot and an amber hairline, no animation. */
 function CheckinCard({ task, now }: { task: Task; now: Date }) {
   const s = useStyles();
-  const t = useTheme();
-  const reduced = useReducedMotion();
-  const [glow] = useState(() => new Animated.Value(0));
-  useEffect(() => {
-    if (reduced) return glow.setValue(1);
-    const loop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(glow, { toValue: 1, duration: 1400, useNativeDriver: true }),
-        Animated.timing(glow, { toValue: 0, duration: 1400, useNativeDriver: true }),
-      ]),
-    );
-    loop.start();
-    return () => loop.stop();
-  }, [glow, reduced]);
-
   const mins = Math.max(0, Math.round((now.getTime() - Date.parse(task.scheduled_at)) / 60_000));
   return (
     <View style={s.checkWrap} accessibilityLiveRegion="polite">
-      <Animated.View
-        pointerEvents="none"
-        style={[
-          s.checkGlow,
-          { opacity: glow.interpolate({ inputRange: [0, 1], outputRange: [0.35, 1] }) },
-        ]}
-      />
       <View style={s.checkCard}>
         <View style={s.metaRow}>
-          <View style={[s.ping, { backgroundColor: t.retry }]} />
-          <Chip label={`${task.checkin_delay_mins ?? 30}-min check-in`} tone="retry" />
+          <View style={s.ping} />
+          <Text style={s.checkLabel}>{task.checkin_delay_mins ?? 30}-min check-in</Text>
         </View>
         <Text style={s.checkTitle}>Did you finish “{task.title}”?</Text>
         <Text style={[s.meta, tabular]}>
@@ -265,7 +240,7 @@ function CheckinCard({ task, now }: { task: Task; now: Date }) {
         </Text>
         <View style={s.checkActions}>
           <Button
-            label="Respond to Check-In"
+            label="Check in"
             kind="primary"
             onPress={() => openCheckin(task.id)}
             style={{ flex: 1 }}
@@ -280,31 +255,21 @@ function CheckinCard({ task, now }: { task: Task; now: Date }) {
 const useStyles = makeStyles((t) => ({
   screen: { flex: 1 },
   content: { padding: 16, paddingBottom: 120, gap: 8 },
-  brandRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  brand: { fontSize: 16, fontWeight: '700', color: t.text },
-  brandMark: { color: t.primary },
-  h1: { fontSize: 34, fontWeight: '800', color: t.text, marginTop: 12 },
+  brandRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  brand: { fontSize: 16, fontWeight: '600', color: t.text },
+  brandMark: { width: 8, height: 8, borderRadius: 4, backgroundColor: t.primary },
+  h1: { fontSize: 32, fontWeight: '600', color: t.text, marginTop: 12 },
   date: { fontSize: 15, color: t.muted, ...tabular },
-  h2: { fontSize: 20, fontWeight: '700', color: t.text, marginTop: 18, marginBottom: 4 },
+  h2: { fontSize: 20, fontWeight: '600', color: t.text, marginTop: 16 },
   velocityRow: { flexDirection: 'row', alignItems: 'baseline', gap: 8 },
-  velocity: { fontSize: 28, fontWeight: '800', color: t.text, ...tabular },
-  velocityLabel: { fontSize: 15, fontWeight: '600', color: t.muted },
+  velocity: { fontSize: 40, fontWeight: '500', color: t.text, ...tabular },
+  velocityLabel: { fontSize: 15, color: t.muted },
   meta: { fontSize: 14, color: t.muted, ...tabular },
   empty: { fontSize: 15, color: t.muted },
   dim: { color: t.muted },
-  notice: { padding: 14, borderRadius: 16, backgroundColor: t.retrySoft, marginTop: 8 },
-  noticeText: { fontSize: 15, fontWeight: '600', color: t.retryText },
-  checkWrap: { marginTop: 12 },
-  checkGlow: {
-    position: 'absolute',
-    top: -3,
-    left: -3,
-    right: -3,
-    bottom: -3,
-    borderRadius: 20,
-    borderWidth: 3,
-    borderColor: t.glow,
-  },
+  notice: { padding: 16, borderRadius: 12, backgroundColor: t.retrySoft, marginTop: 8 },
+  noticeText: { fontSize: 15, fontWeight: '500', color: t.retryText },
+  checkWrap: { marginTop: 8 },
   checkCard: {
     ...glass(t),
     borderRadius: 16,
@@ -313,22 +278,24 @@ const useStyles = makeStyles((t) => ({
     padding: 16,
     gap: 8,
   },
-  ping: { width: 10, height: 10, borderRadius: 5 },
-  checkTitle: { fontSize: 20, fontWeight: '700', color: t.text },
-  checkActions: { flexDirection: 'row', gap: 8, marginTop: 6 },
-  metaRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6 },
-  feedRow: { flexDirection: 'row', alignItems: 'stretch', gap: 10 },
+  ping: { width: 8, height: 8, borderRadius: 4, backgroundColor: t.retry },
+  checkLabel: { fontSize: 14, fontWeight: '500', color: t.retryText },
+  checkTitle: { fontSize: 18, fontWeight: '600', color: t.text },
+  checkActions: { flexDirection: 'row', gap: 8, marginTop: 4 },
+  metaRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 },
+  feedRow: { flexDirection: 'row', alignItems: 'stretch', gap: 12 },
   feedTime: {
     width: 64,
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: '500',
     color: t.text,
     paddingTop: 16,
     ...tabular,
   },
   rail: { width: 12, alignItems: 'center' },
   dot: { width: 10, height: 10, borderRadius: 5, backgroundColor: t.primary, marginTop: 20 },
-  dotDone: { backgroundColor: t.inactive },
+  dotLater: { backgroundColor: t.inactive },
+  dotDone: { backgroundColor: 'transparent', borderWidth: 2, borderColor: t.inactive },
   dotPending: { backgroundColor: t.retry },
   railLine: { flex: 1, width: 2, backgroundColor: t.inactive, marginTop: 4 },
   feedCard: {
@@ -336,25 +303,21 @@ const useStyles = makeStyles((t) => ({
     ...glass(t),
     borderWidth: 1,
     borderRadius: 16,
-    padding: 14,
+    padding: 16,
     gap: 8,
     marginBottom: 8,
   },
-  feedTitle: { fontSize: 17, fontWeight: '600', color: t.text },
+  feedTitle: { fontSize: 17, fontWeight: '500', color: t.text },
   doneBtn: { alignSelf: 'flex-start', minHeight: 40, paddingHorizontal: 0, paddingVertical: 4 },
   fab: {
     position: 'absolute',
     right: 16,
     bottom: 16,
     paddingHorizontal: 20,
-    paddingVertical: 14,
-    borderRadius: 999,
+    paddingVertical: 16,
+    borderRadius: 14,
     backgroundColor: t.primary,
-    shadowColor: t.primary,
-    shadowOpacity: 0.45,
-    shadowRadius: 14,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 6,
+    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.16)',
   },
-  fabText: { fontSize: 16, fontWeight: '700', color: t.onPrimary },
+  fabText: { fontSize: 16, fontWeight: '600', color: t.onPrimary },
 }));

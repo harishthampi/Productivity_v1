@@ -1,8 +1,9 @@
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Alert, ScrollView, Text, TextInput } from 'react-native';
+import { Alert, Text } from 'react-native';
+import { FormScroll } from '../../components/FormScroll';
 import { fromPeople, PeopleEditor, toPerson, type Person } from '../../components/People';
-import { Button } from '../../components/ui';
+import { Button, Field } from '../../components/ui';
 import { deleteSquad, listSquads, saveSquad } from '../../lib/social';
 import { makeStyles } from '../../theme';
 
@@ -53,42 +54,35 @@ export default function EditSquad() {
       },
     ]);
 
-  if (loading) return <Text style={s.pad}>Loading…</Text>;
+  if (loading) return <Text style={[s.pad, s.hint]}>Loading…</Text>;
   return (
     <>
-      <Stack.Screen options={{ title: isNew ? 'New Squad' : 'Edit Squad' }} />
-      <ScrollView contentContainerStyle={s.pad} keyboardShouldPersistTaps="handled">
+      <Stack.Screen options={{ title: isNew ? 'New squad' : 'Edit squad' }} />
+      <FormScroll contentContainerStyle={s.pad}>
         <Text style={s.label}>Squad name</Text>
-        <TextInput
+        <Field
           value={name}
           onChangeText={setName}
-          placeholder="e.g. Weekend Doubles"
+          placeholder="e.g. Weekend doubles"
           accessibilityLabel="Squad name"
-          style={s.input}
         />
-        <Text style={s.label}>People · tap a tier to switch Primary / Bench</Text>
+        <Text style={s.label}>People</Text>
+        <Text style={s.hint}>Tap a tier to switch between primary and bench</Text>
         <PeopleEditor people={people} onChange={setPeople} />
         {error && <Text style={s.error}>{error}</Text>}
         <Button label="Save" kind="primary" onPress={save} style={{ marginTop: 24 }} />
         {!isNew && (
           <Button label="Delete squad" kind="danger" onPress={remove} style={{ marginTop: 12 }} />
         )}
-      </ScrollView>
+      </FormScroll>
     </>
   );
 }
 
 const useStyles = makeStyles((t) => ({
   pad: { padding: 16 },
-  label: { fontSize: 15, fontWeight: '600', color: t.muted, marginTop: 18, marginBottom: 6 },
-  input: {
-    fontSize: 17,
-    padding: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: t.border,
-    backgroundColor: t.card,
-    color: t.text,
-  },
+  // Label sits closer to its own field (8) than to the field above (24), as in the task editor.
+  label: { fontSize: 15, fontWeight: '500', color: t.muted, marginTop: 24, marginBottom: 8 },
+  hint: { fontSize: 14, color: t.muted, marginBottom: 8 },
   error: { color: t.danger, marginTop: 16, fontSize: 15 },
 }));

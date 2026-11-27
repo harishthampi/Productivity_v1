@@ -1,6 +1,5 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { type ReactNode } from 'react';
 import {
-  AccessibilityInfo,
   Pressable,
   Text,
   TextInput,
@@ -135,7 +134,7 @@ export function Avatar({ name, size = 36 }: { name: string; size?: number }) {
         justifyContent: 'center',
       }}
     >
-      <Text style={{ color: t.primaryText, fontWeight: '700', fontSize: size * 0.4 }}>
+      <Text style={{ color: t.primaryText, fontWeight: '600', fontSize: size * 0.4 }}>
         {initials}
       </Text>
     </View>
@@ -158,16 +157,6 @@ export function Progress({ value, tone = 'primary' }: { value: number; tone?: To
       />
     </View>
   );
-}
-
-export function useReducedMotion() {
-  const [reduced, setReduced] = useState(false);
-  useEffect(() => {
-    AccessibilityInfo.isReduceMotionEnabled().then(setReduced, () => {});
-    const sub = AccessibilityInfo.addEventListener('reduceMotionChanged', setReduced);
-    return () => sub.remove();
-  }, []);
-  return reduced;
 }
 
 const useStyles = makeStyles((t) => ({
@@ -194,15 +183,9 @@ const useStyles = makeStyles((t) => ({
     borderRadius: radius,
     ...glass(t),
     padding: 16,
-    gap: 10,
+    gap: 12,
   },
-  label: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: t.muted,
-    textTransform: 'uppercase',
-    letterSpacing: 0.6,
-  },
+  label: { fontSize: 14, fontWeight: '500', color: t.muted },
   input: {
     fontSize: 17,
     padding: 12,
@@ -213,5 +196,5 @@ const useStyles = makeStyles((t) => ({
     color: t.text,
   },
   chip: { alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 },
-  chipText: { fontSize: 13, fontWeight: '600', ...tabular },
+  chipText: { fontSize: 13, fontWeight: '500', ...tabular },
 }));

@@ -13,7 +13,7 @@ import {
   type RsvpStatus,
   type Squad,
 } from '../../lib/social';
-import { makeStyles, tabular, useTheme } from '../../theme';
+import { makeStyles, tabular } from '../../theme';
 
 const MY_RSVP: Record<RsvpStatus, [string, Tone]> = {
   bench: ['Bench', 'missed'],
@@ -68,7 +68,7 @@ export default function Plans() {
         <View style={s.headerRow}>
           <Text style={s.h1}>Plans</Text>
           <Button
-            label="＋ New Plan"
+            label="New plan"
             kind="primary"
             onPress={() => router.push('/event/new')}
             style={s.headerBtn}
@@ -78,18 +78,21 @@ export default function Plans() {
         <View style={s.segment} accessibilityRole="tablist">
           {(
             [
-              ['plans', `Upcoming Plans (${planCount})`],
-              ['squads', `My Squads (${squads.data?.length ?? 0})`],
+              ['plans', 'Upcoming', planCount],
+              ['squads', 'Squads', squads.data?.length ?? 0],
             ] as const
-          ).map(([key, label]) => (
+          ).map(([key, label, count]) => (
             <Pressable
               key={key}
               accessibilityRole="tab"
+              accessibilityLabel={`${label}, ${count}`}
               accessibilityState={{ selected: tab === key }}
               onPress={() => setTab(key)}
               style={[s.segBtn, tab === key && s.segBtnOn]}
             >
-              <Text style={[s.segText, tab === key && s.segTextOn]}>{label}</Text>
+              <Text style={[s.segText, tab === key && s.segTextOn]}>
+                {label} <Text style={s.segCount}>{count}</Text>
+              </Text>
             </Pressable>
           ))}
         </View>
@@ -127,13 +130,10 @@ export default function Plans() {
             {squads.data?.map((sq) => (
               <SquadCard key={sq.id} squad={sq} />
             ))}
-            <Pressable
-              accessibilityRole="button"
+            <Button
+              label="New squad"
               onPress={() => router.push({ pathname: '/squad/[id]', params: { id: 'new' } })}
-              style={s.dashed}
-            >
-              <Text style={s.dashedText}>＋ Create New Squad</Text>
-            </Pressable>
+            />
           </>
         )}
       </ScrollView>
@@ -156,20 +156,18 @@ function HostedCard({ event: e }: { event: Event & { invites: Invite[] } }) {
         <Text style={s.cardTitle}>{e.title}</Text>
         <Text style={s.when}>{formatWhen(e.scheduled_at)}</Text>
         <View style={s.chips}>
-          {changes.length > 0 && (
+          {changes.length > 0 ? (
             <Chip
-              label={`${changes.length} time change${changes.length > 1 ? 's' : ''} requested · needs review`}
+              label={changes.length > 1 ? `${changes.length} time changes` : 'Time change'}
               tone="retry"
             />
-          )}
-          {full ? (
-            <Chip label={`${accepted}/${target} confirmed · full quorum`} tone="success" />
           ) : (
-            <Chip
-              label={`${accepted}${target ? `/${target}` : ''} going${waiting ? ` (${waiting} pending)` : ''}`}
-              tone="primary"
-            />
+            full && <Chip label="Full" tone="success" />
           )}
+          <Text style={s.when}>
+            {accepted}
+            {target ? ` of ${target}` : ''} going{waiting ? ` · ${waiting} waiting` : ''}
+          </Text>
         </View>
         {(changes[0] || bench > 0) && (
           <Text style={s.muted}>
@@ -181,7 +179,7 @@ function HostedCard({ event: e }: { event: Event & { invites: Invite[] } }) {
           </Text>
         )}
         {changes.length > 0 && (
-          <Button label="Review Time Change" onPress={() => openEvent(e.id)} />
+          <Button label="Review time change" onPress={() => openEvent(e.id)} />
         )}
       </Card>
     </Pressable>
@@ -190,22 +188,19 @@ function HostedCard({ event: e }: { event: Event & { invites: Invite[] } }) {
 
 function SquadCard({ squad }: { squad: Squad }) {
   const s = useStyles();
-  const t = useTheme();
   const members = [...squad.squad_members].sort((a, b) => a.sort_order - b.sort_order);
   const primary = members.filter((m) => m.default_tier === 'primary').length;
   return (
     <Card>
       <Text style={s.cardTitle}>{squad.name}</Text>
       <Text style={s.muted}>
-        {primary} Primary · {members.length - primary} Bench
+        {primary} primary · {members.length - primary} bench
       </Text>
       <View style={s.roster}>
         {members.slice(0, 8).map((m, i) => (
-          <View key={m.id ?? i} style={{ alignItems: 'center', gap: 2 }}>
+          // Bench members sit dimmed; the counts above carry the same info as text.
+          <View key={m.id ?? i} style={m.default_tier !== 'primary' && s.benched}>
             <Avatar name={m.display_name} size={32} />
-            <Text style={[s.tier, { color: m.default_tier === 'primary' ? t.primary : t.muted }]}>
-              {m.default_tier === 'primary' ? 'P' : 'B'}
-            </Text>
           </View>
         ))}
         {members.length > 8 && <Text style={s.muted}>+{members.length - 8}</Text>}
@@ -235,9 +230,9 @@ const useStyles = makeStyles((t) => ({
     justifyContent: 'space-between',
     marginTop: 12,
   },
-  h1: { fontSize: 34, fontWeight: '800', color: t.text },
-  h2: { fontSize: 20, fontWeight: '700', color: t.text, marginTop: 8 },
-  headerBtn: { minHeight: 40, paddingVertical: 8, borderRadius: 999 },
+  h1: { fontSize: 32, fontWeight: '600', color: t.text },
+  h2: { fontSize: 20, fontWeight: '600', color: t.text, marginTop: 8 },
+  headerBtn: { minHeight: 40, paddingVertical: 8 },
   segment: {
     flexDirection: 'row',
     backgroundColor: t.card,
@@ -254,24 +249,15 @@ const useStyles = makeStyles((t) => ({
     justifyContent: 'center',
   },
   segBtnOn: { backgroundColor: t.primarySoft },
-  segText: { fontSize: 14, fontWeight: '600', color: t.muted, ...tabular },
+  segText: { fontSize: 14, fontWeight: '500', color: t.muted, ...tabular },
   segTextOn: { color: t.primaryText },
-  cardTitle: { fontSize: 18, fontWeight: '700', color: t.text },
+  segCount: { fontWeight: '400' },
+  cardTitle: { fontSize: 18, fontWeight: '600', color: t.text },
   when: { fontSize: 14, color: t.muted, ...tabular },
   muted: { fontSize: 14, color: t.muted },
   error: { fontSize: 14, color: t.danger },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  roster: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, alignItems: 'center' },
-  tier: { fontSize: 11, fontWeight: '700' },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 },
+  roster: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, alignItems: 'center' },
+  benched: { opacity: 0.45 },
   actions: { flexDirection: 'row', gap: 8 },
-  dashed: {
-    minHeight: 56,
-    borderRadius: 16,
-    borderWidth: 1.5,
-    borderStyle: 'dashed',
-    borderColor: t.muted,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  dashedText: { fontSize: 16, fontWeight: '600', color: t.muted },
 }));
